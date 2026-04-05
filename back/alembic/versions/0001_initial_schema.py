@@ -20,31 +20,41 @@ depends_on: Union[str, Sequence[str], None] = None
 # Helpers : création des types ENUM PostgreSQL
 # ---------------------------------------------------------------------------
 
+def _safe_create_enum(name: str, values: str) -> None:
+    """Crée un ENUM PostgreSQL de manière idempotente (ignore si déjà existant)."""
+    op.execute(
+        f"DO $$ BEGIN "
+        f"CREATE TYPE {name} AS ENUM ({values}); "
+        f"EXCEPTION WHEN duplicate_object THEN NULL; "
+        f"END $$;"
+    )
+
+
 def _create_enums() -> None:
     """Crée tous les types ENUM avant les tables qui en dépendent."""
-    op.execute("CREATE TYPE user_role AS ENUM "
-               "('student','tutor','parent','admin','canope','cosp')")
-    op.execute("CREATE TYPE tutor_status AS ENUM "
-               "('pending','validated','rejected','suspended')")
-    op.execute("CREATE TYPE session_status AS ENUM "
-               "('pending_parent','pending_tutor','confirmed',"
-               "'in_progress','completed','cancelled','disputed')")
-    op.execute("CREATE TYPE payment_status AS ENUM "
-               "('pending','processing','completed','failed','refunded')")
-    op.execute("CREATE TYPE escrow_status AS ENUM "
-               "('held','released','disputed','refunded')")
-    op.execute("CREATE TYPE assessment_status AS ENUM "
-               "('draft','in_progress','validated')")
-    op.execute("CREATE TYPE message_type AS ENUM "
-               "('text','image','file','system')")
-    op.execute("CREATE TYPE notification_type AS ENUM "
-               "('session_request','payment','message','review','system')")
-    op.execute("CREATE TYPE resource_type AS ENUM "
-               "('pdf','video','audio','quiz','exercise')")
-    op.execute("CREATE TYPE conversation_type AS ENUM "
-               "('student_tutor','parent_tutor')")
-    op.execute("CREATE TYPE payment_method AS ENUM "
-               "('mvola','orange_money','wallet')")
+    _safe_create_enum("user_role",
+                      "'student','tutor','parent','admin','canope','cosp'")
+    _safe_create_enum("tutor_status",
+                      "'pending','validated','rejected','suspended'")
+    _safe_create_enum("session_status",
+                      "'pending_parent','pending_tutor','confirmed',"
+                      "'in_progress','completed','cancelled','disputed'")
+    _safe_create_enum("payment_status",
+                      "'pending','processing','completed','failed','refunded'")
+    _safe_create_enum("escrow_status",
+                      "'held','released','disputed','refunded'")
+    _safe_create_enum("assessment_status",
+                      "'draft','in_progress','validated'")
+    _safe_create_enum("message_type",
+                      "'text','image','file','system'")
+    _safe_create_enum("notification_type",
+                      "'session_request','payment','message','review','system'")
+    _safe_create_enum("resource_type",
+                      "'pdf','video','audio','quiz','exercise'")
+    _safe_create_enum("conversation_type",
+                      "'student_tutor','parent_tutor'")
+    _safe_create_enum("payment_method",
+                      "'mvola','orange_money','wallet'")
 
 
 def _drop_enums() -> None:
@@ -92,7 +102,7 @@ def upgrade() -> None:
     op.create_table(
         "profiles",
         sa.Column("id",                 postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("role",               sa.Enum(name="user_role"),     nullable=False),
+        sa.Column("role",               postgresql.ENUM(name="user_role", create_type=False), nullable=False),
         sa.Column("full_name",          sa.Text,  nullable=False),
         sa.Column("email",              sa.Text,  nullable=False, unique=True),
         sa.Column("phone",              sa.Text),
@@ -153,7 +163,7 @@ def upgrade() -> None:
         sa.Column("profile_id",        postgresql.UUID(as_uuid=True),
                   sa.ForeignKey("profiles.id", ondelete="CASCADE"),
                   nullable=False, unique=True),
-        sa.Column("validation_status", sa.Enum(name="tutor_status"),
+        sa.Column("validation_status", postgresql.ENUM(name="tutor_status", create_type=False),
                   nullable=False, server_default="pending"),
         sa.Column("bio",               sa.Text),
         sa.Column("subjects",          postgresql.ARRAY(sa.Text), nullable=False,
@@ -261,7 +271,7 @@ def upgrade() -> None:
         sa.Column("tutor_id",           postgresql.UUID(as_uuid=True),
                   sa.ForeignKey("profiles.id", ondelete="RESTRICT"),
                   nullable=False),
-        sa.Column("status",             sa.Enum(name="session_status"),
+        sa.Column("status",             postgresql.ENUM(name="session_status", create_type=False),
                   nullable=False, server_default="pending_tutor"),
         sa.Column("subject",            sa.Text, nullable=False),
         sa.Column("mode",               sa.Text, nullable=False,
@@ -323,9 +333,9 @@ def upgrade() -> None:
         # Colonne générée : commission MIABO = 10%
         sa.Column("commission_ariary", sa.Integer,
                   sa.Computed("amount_ariary / 10", persisted=True)),
-        sa.Column("payment_method",    sa.Enum(name="payment_method"),
+        sa.Column("payment_method",    postgresql.ENUM(name="payment_method", create_type=False),
                   nullable=False),
-        sa.Column("status",            sa.Enum(name="payment_status"),
+        sa.Column("status",            postgresql.ENUM(name="payment_status", create_type=False),
                   nullable=False, server_default="pending"),
         sa.Column("external_ref",      sa.Text),
         sa.Column("phone_number",      sa.Text, nullable=False),
@@ -348,7 +358,7 @@ def upgrade() -> None:
                   sa.ForeignKey("profiles.id", ondelete="RESTRICT"),
                   nullable=False),
         sa.Column("amount_ariary", sa.Integer, nullable=False),
-        sa.Column("status",        sa.Enum(name="escrow_status"),
+        sa.Column("status",        postgresql.ENUM(name="escrow_status", create_type=False),
                   nullable=False, server_default="held"),
         sa.Column("release_at",    sa.TIMESTAMP(timezone=True), nullable=False),
         sa.Column("released_at",   sa.TIMESTAMP(timezone=True)),
@@ -378,7 +388,7 @@ def upgrade() -> None:
         sa.Column("disc_scores",        postgresql.JSONB),
         sa.Column("disc_dominant",      sa.Text),
         sa.Column("actor_comment",      sa.Text),
-        sa.Column("status",             sa.Enum(name="assessment_status"),
+        sa.Column("status",             postgresql.ENUM(name="assessment_status", create_type=False),
                   nullable=False, server_default="draft"),
         sa.Column("created_at",         sa.TIMESTAMP(timezone=True),
                   server_default=sa.text("now()")),
@@ -407,7 +417,7 @@ def upgrade() -> None:
                   nullable=False),
         sa.Column("title_fr",     sa.Text, nullable=False),
         sa.Column("title_mg",     sa.Text),
-        sa.Column("type",         sa.Enum(name="resource_type"), nullable=False),
+        sa.Column("type",         postgresql.ENUM(name="resource_type", create_type=False), nullable=False),
         sa.Column("subject",      sa.Text, nullable=False),
         sa.Column("grade_level",  sa.Text),
         sa.Column("file_url",     sa.Text),
@@ -449,7 +459,7 @@ def upgrade() -> None:
         "conversations",
         sa.Column("id",         postgresql.UUID(as_uuid=True),
                   primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("type",       sa.Enum(name="conversation_type"),
+        sa.Column("type",       postgresql.ENUM(name="conversation_type", create_type=False),
                   nullable=False, server_default="student_tutor"),
         sa.Column("session_id", postgresql.UUID(as_uuid=True),
                   sa.ForeignKey("sessions.id", ondelete="SET NULL")),
@@ -483,7 +493,7 @@ def upgrade() -> None:
                   nullable=False),
         sa.Column("sender_id",       postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("content",         sa.Text, nullable=False),
-        sa.Column("message_type",    sa.Enum(name="message_type"),
+        sa.Column("message_type",    postgresql.ENUM(name="message_type", create_type=False),
                   nullable=False, server_default="text"),
         sa.Column("file_url",        sa.Text),
         sa.Column("is_deleted",      sa.Boolean, nullable=False,
@@ -531,7 +541,7 @@ def upgrade() -> None:
         sa.Column("user_id",    postgresql.UUID(as_uuid=True),
                   sa.ForeignKey("profiles.id", ondelete="CASCADE"),
                   nullable=False),
-        sa.Column("type",       sa.Enum(name="notification_type"), nullable=False),
+        sa.Column("type",       postgresql.ENUM(name="notification_type", create_type=False), nullable=False),
         sa.Column("title",      sa.Text, nullable=False),
         sa.Column("body",       sa.Text),
         sa.Column("link",       sa.Text),

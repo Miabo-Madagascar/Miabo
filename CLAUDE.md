@@ -181,7 +181,9 @@ Navigateur → /api/backend/:path*
 # back/.env (basé sur back/env.sample)
 DATABASE_URL="postgresql://user:pass@host:port/db?sslmode=require"
 SUPABASE_URL="https://xxx.supabase.co"
-SUPABASE_JWT_SECRET="votre-jwt-secret"
+SUPABASE_JWT_SECRET="[Legacy JWT Secret — Settings > JWT Keys > Legacy JWT Secret tab]"
+# Note : Supabase utilise ECC (P-256) / ES256. FastAPI vérifie d'abord via JWKS,
+# puis fallback HS256 avec SUPABASE_JWT_SECRET si SUPABASE_URL est renseigné.
 SUPABASE_SERVICE_ROLE_KEY="votre-service-role-key"
 
 # front/.env.local (basé sur front/.env.local.example)

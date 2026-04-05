@@ -1,10 +1,17 @@
 """
 Dépendances FastAPI partagées — injectées via Depends().
 Centralise : session BDD, utilisateur courant, contrôle de rôle.
+
+Validation JWT :
+- Supabase utilise désormais ECC (P-256) → algorithme ES256.
+- Les clés publiques sont récupérées via le endpoint JWKS de Supabase.
+- Fallback HS256 via SUPABASE_JWT_SECRET si SUPABASE_URL absent.
 """
 
 import os
 from typing import Generator, Annotated
+
+import httpx
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
@@ -26,6 +33,63 @@ def get_db() -> Generator[Session, None, None]:
 
 DbDep = Annotated[Session, Depends(get_db)]
 
+# ── Récupération des clés publiques JWKS ──────────────────────────────────
+
+_jwks_cache: dict | None = None
+
+def _get_jwks() -> dict:
+    """
+    Récupère les clés publiques Supabase depuis le endpoint JWKS.
+    Mise en cache en mémoire pour éviter un appel HTTP à chaque requête.
+    """
+    global _jwks_cache
+    if _jwks_cache:
+        return _jwks_cache
+
+    supabase_url = os.getenv("SUPABASE_URL", "").rstrip("/")
+    if not supabase_url:
+        return {}
+
+    try:
+        response = httpx.get(
+            f"{supabase_url}/auth/v1/.well-known/jwks.json",
+            timeout=5,
+        )
+        response.raise_for_status()
+        _jwks_cache = response.json()
+        return _jwks_cache
+    except Exception:
+        return {}
+
+# ── Décodage JWT — ES256 (ECC) ou HS256 (legacy) ──────────────────────────
+
+def _decode_jwt(token: str) -> dict:
+    """
+    Tente de décoder le JWT en ES256 (clé ECC Supabase) puis en HS256 (legacy).
+    Lève JWTError si les deux échouent.
+    """
+    # Tentative ES256 via JWKS
+    jwks = _get_jwks()
+    if jwks:
+        try:
+            return jwt.decode(
+                token,
+                jwks,
+                algorithms=["ES256", "RS256"],
+                options={"verify_aud": False},
+            )
+        except JWTError:
+            pass
+
+    # Fallback HS256 — Legacy JWT Secret (Supabase > Settings > JWT Keys > Legacy)
+    jwt_secret = os.getenv("SUPABASE_JWT_SECRET", "")
+    return jwt.decode(
+        token,
+        jwt_secret,
+        algorithms=["HS256"],
+        options={"verify_aud": False},
+    )
+
 # ── Auth JWT Supabase ──────────────────────────────────────────────────────
 
 bearer_scheme = HTTPBearer()
@@ -34,20 +98,9 @@ def get_current_user(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(bearer_scheme)],
     db: DbDep,
 ) -> Profile:
-    """
-    Valide le JWT Supabase (HS256) et retourne le profil BDD.
-    Le JWT secret se trouve dans Supabase > Settings > API > JWT Settings.
-    """
-    jwt_secret = os.getenv("SUPABASE_JWT_SECRET", "")
-    token      = credentials.credentials
-
+    """Valide le JWT Supabase et retourne le profil BDD."""
     try:
-        payload = jwt.decode(
-            token,
-            jwt_secret,
-            algorithms=["HS256"],
-            options={"verify_aud": False},   # Supabase n'utilise pas "aud"
-        )
+        payload = _decode_jwt(credentials.credentials)
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -70,10 +123,7 @@ def get_current_user(
         )
 
     if not profile.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Compte suspendu",
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Compte suspendu")
 
     return profile
 

@@ -70,7 +70,9 @@ def run_migrations_online() -> None:
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
-        poolclass=pool.NullPool,  # Pas de pool pour les migrations
+        poolclass=pool.NullPool,
+        # Désactive les prepared statements — requis avec PgBouncer port 6543
+        connect_args={"prepare_threshold": None},
     )
 
     with connectable.connect() as connection:
@@ -79,7 +81,6 @@ def run_migrations_online() -> None:
             target_metadata=target_metadata,
             compare_type=True,
             compare_server_default=True,
-            # Inclure les schémas Supabase Auth dans la détection
             include_schemas=True,
         )
 
