@@ -45,17 +45,36 @@ export interface SessionFull extends SessionWithParticipants {
 
 // ── Tutor card — résumé public pour le matching ───────────────────────────
 
+/** Correspond à la réponse de GET /api/v1/tutors/search et /tutors/{id} */
 export interface TutorCard {
-  id:              string
-  full_name:       string
-  avatar_url:      string | null
-  subjects:        string[]
-  hourly_rate:     number
-  average_rating:  number | null
-  session_count:   number
-  is_online_ok:    boolean
-  is_in_person_ok: boolean
-  riasec_code:     string | null
+  id:               string
+  full_name:        string
+  avatar_url:       string | null
+  slug:             string | null
+  bio:              string | null
+  subjects:         string[]
+  grade_levels:     string[]
+  hourly_rate:      number
+  teaching_methods: string[]
+  location:         string | null
+  avg_rating:       number
+  total_sessions:   number
+  canope_certified: boolean
+}
+
+/** Profil complet retourné par GET /api/v1/profiles/me */
+export interface FullProfile {
+  id:                 string
+  email:              string
+  full_name:          string
+  role:               string
+  phone:              string | null
+  avatar_url:         string | null
+  preferred_language: "fr" | "mg"
+  is_active:          boolean
+  created_at:         string | null
+  student_profile:    StudentProfile | null
+  tutor_profile:      TutorProfile | null
 }
 
 // ── Messagerie enrichie ────────────────────────────────────────────────────

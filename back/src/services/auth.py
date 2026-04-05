@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
 from src.models.users import Profile
+from src.models.profiles import StudentProfile, TutorProfile
 from src.models.enums import UserRole
 
 
@@ -51,6 +52,26 @@ def create_profile(
         is_active=True,
     )
     db.add(profile)
+    db.flush()  # obtenir l'id avant de créer le sous-profil
+
+    # Crée le sous-profil métier selon le rôle
+    if role == UserRole.student:
+        db.add(StudentProfile(
+            id=uuid.uuid4(),
+            profile_id=profile.id,
+            grade_level="6eme",       # valeur par défaut — modifiable dans le profil
+            subjects_needed=[],
+        ))
+    elif role == UserRole.tutor:
+        db.add(TutorProfile(
+            id=uuid.uuid4(),
+            profile_id=profile.id,
+            hourly_rate=5000,         # valeur par défaut — modifiable dans le profil
+            subjects=[],
+            grade_levels=[],
+            teaching_methods=[],
+        ))
+
     db.commit()
     db.refresh(profile)
     return profile

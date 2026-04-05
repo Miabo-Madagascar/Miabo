@@ -32,7 +32,9 @@ export function RegisterForm({ locale }: RegisterFormProps) {
     setError(null)
     setIsLoading(true)
 
-    // 1. Créer le compte Supabase Auth
+    // Crée le compte Supabase Auth.
+    // Le trigger PostgreSQL handle_new_user() crée automatiquement
+    // la ligne profiles + le sous-profil métier dès l'insertion dans auth.users.
     const { data, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -45,20 +47,16 @@ export function RegisterForm({ locale }: RegisterFormProps) {
       return
     }
 
-    // 2. Créer le profil via FastAPI — envoie le JWT dans le body (sub + email extraits côté serveur)
-    const session = data.session
-    if (session) {
-      await fetch("/api/backend/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          token:     session.access_token,
-          full_name: fullName,
-          role,
-        }),
-      })
+    if (!data.session) {
+      // Email de confirmation requis — le profil est déjà créé en BDD
+      setError(
+        "Compte créé ! Vérifiez votre boîte mail et confirmez votre adresse pour vous connecter."
+      )
+      setIsLoading(false)
+      return
     }
 
+    // Session disponible directement (confirmation désactivée en dev)
     router.push(`/${locale}/dashboard`)
     router.refresh()
   }
