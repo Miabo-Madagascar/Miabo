@@ -105,3 +105,18 @@ export type SessionDuration = 60 | 90 | 120 | 180
 
 /** Langues supportées — CDC §i18n */
 export type SupportedLocale = "fr" | "mg"
+
+/** Niveaux scolaires — CDC §4.1 student_profiles.grade_level */
+export enum GradeLevel {
+  Sixieme   = "6eme",
+  Cinquieme = "5eme",
+  Quatrieme = "4eme",
+  Troisieme = "3eme",
+  Seconde   = "2nde",
+  Premiere  = "1ere",
+  Terminale = "Tle",
+  Superieur = "superieur",
+}
+
+/** Réactions emoji autorisées sur les messages */
+export type AllowedEmoji = "👍" | "❤️" | "😂" | "😮" | "😢" | "🙏"

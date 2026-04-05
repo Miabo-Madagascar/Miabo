@@ -1,11 +1,13 @@
 /**
  * Client HTTP FastAPI — wrapper autour de fetch().
- * Injecte automatiquement le JWT Supabase dans Authorization.
- *
- * TODO PHASE 1 : brancher createClient() Supabase pour récupérer le token.
+ * Utilise /api/backend/* (proxifié par Next.js vers FastAPI).
+ * L'URL réelle du backend n'est jamais exposée au navigateur.
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
+import { createClient } from "@/lib/supabase/client"
+
+/** Préfixe proxy — défini dans next.config.ts rewrites */
+const API_BASE = "/api/backend"
 
 export interface ApiError {
   detail: string
@@ -13,10 +15,11 @@ export interface ApiError {
 }
 
 async function getAuthHeader(): Promise<Record<string, string>> {
-  // TODO : récupérer le token via supabase/client
-  // const supabase = createClient()
-  // const { data: { session } } = await supabase.auth.getSession()
-  // if (session?.access_token) return { Authorization: `Bearer ${session.access_token}` }
+  const supabase = createClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session?.access_token) {
+    return { Authorization: `Bearer ${session.access_token}` }
+  }
   return {}
 }
 
@@ -44,8 +47,8 @@ export async function apiFetch<T>(
 }
 
 export const api = {
-  get:    <T>(path: string)                     => apiFetch<T>(path),
-  post:   <T>(path: string, body: unknown)      => apiFetch<T>(path, { method: "POST",  body: JSON.stringify(body) }),
-  put:    <T>(path: string, body: unknown)      => apiFetch<T>(path, { method: "PUT",   body: JSON.stringify(body) }),
-  delete: <T>(path: string)                     => apiFetch<T>(path, { method: "DELETE" }),
+  get:    <T>(path: string)                => apiFetch<T>(path),
+  post:   <T>(path: string, body: unknown) => apiFetch<T>(path, { method: "POST",  body: JSON.stringify(body) }),
+  put:    <T>(path: string, body: unknown) => apiFetch<T>(path, { method: "PUT",   body: JSON.stringify(body) }),
+  delete: <T>(path: string)               => apiFetch<T>(path, { method: "DELETE" }),
 }

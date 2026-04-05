@@ -1,19 +1,28 @@
 /**
- * Page inscription — création de compte multi-rôle.
- * TODO PHASE 1 : brancher RegisterForm + action Supabase.
+ * Page inscription — création compte multi-rôle.
  */
 
-export default function RegisterPage() {
+import { RegisterForm } from "@/components/auth/RegisterForm"
+
+interface RegisterPageProps {
+  params: Promise<{ locale: string }>
+}
+
+export default async function RegisterPage({ params }: RegisterPageProps) {
+  const { locale } = await params
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--bg-subtle)]">
       <div className="w-full max-w-sm rounded-xl bg-[var(--bg-base)] p-8 shadow-[var(--shadow-md)]">
-        <h1 className="mb-6 text-2xl font-semibold text-[var(--text-primary)]">
-          Créer un compte
-        </h1>
-        {/* TODO PHASE 1 : <RegisterForm /> */}
-        <p className="text-sm text-[var(--text-secondary)]">
-          Formulaire d'inscription à implémenter.
-        </p>
+        <div className="mb-6 text-center">
+          <h1 className="text-2xl font-bold text-[var(--color-primary-500)]">
+            MIABO
+          </h1>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+            Créer votre compte
+          </p>
+        </div>
+        <RegisterForm locale={locale} />
       </div>
     </div>
   )

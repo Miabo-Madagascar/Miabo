@@ -3,11 +3,15 @@ Dépendances FastAPI partagées — injectées via Depends().
 Centralise : session BDD, utilisateur courant, contrôle de rôle.
 """
 
+import os
 from typing import Generator, Annotated
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jose import JWTError, jwt
 from sqlalchemy.orm import Session
+
 from src.config.database import SessionLocal
+from src.models.users import Profile
 from src.models.enums import UserRole
 
 # ── Session BDD ────────────────────────────────────────────────────────────
@@ -29,23 +33,51 @@ bearer_scheme = HTTPBearer()
 def get_current_user(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(bearer_scheme)],
     db: DbDep,
-) -> dict:
+) -> Profile:
     """
-    Valide le JWT Supabase et retourne le profil utilisateur.
-    TODO PHASE 1 : décoder le JWT avec python-jose + SUPABASE_JWT_SECRET.
+    Valide le JWT Supabase (HS256) et retourne le profil BDD.
+    Le JWT secret se trouve dans Supabase > Settings > API > JWT Settings.
     """
-    # token = credentials.credentials
-    # payload = jwt.decode(token, settings.SUPABASE_JWT_SECRET, algorithms=["HS256"])
-    # user_id = payload.get("sub")
-    # profile = db.query(Profile).filter(Profile.id == user_id).first()
-    # if not profile: raise HTTPException(status_code=401, detail="Utilisateur introuvable")
-    # return profile
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Authentification non implémentée — PHASE 1",
-    )
+    jwt_secret = os.getenv("SUPABASE_JWT_SECRET", "")
+    token      = credentials.credentials
 
-CurrentUser = Annotated[dict, Depends(get_current_user)]
+    try:
+        payload = jwt.decode(
+            token,
+            jwt_secret,
+            algorithms=["HS256"],
+            options={"verify_aud": False},   # Supabase n'utilise pas "aud"
+        )
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token invalide ou expiré",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    user_id: str | None = payload.get("sub")
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token sans identifiant utilisateur",
+        )
+
+    profile = db.query(Profile).filter(Profile.id == user_id).first()
+    if not profile:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Profil introuvable — inscription incomplète",
+        )
+
+    if not profile.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Compte suspendu",
+        )
+
+    return profile
+
+CurrentUser = Annotated[Profile, Depends(get_current_user)]
 
 # ── Contrôle de rôle ───────────────────────────────────────────────────────
 
@@ -54,11 +86,11 @@ def require_role(*roles: UserRole):
     Dependency factory — vérifie que l'utilisateur a l'un des rôles requis.
     Usage : Depends(require_role(UserRole.admin, UserRole.canope))
     """
-    def checker(current_user: CurrentUser) -> dict:
-        if current_user.get("role") not in [r.value for r in roles]:
+    def checker(current_user: CurrentUser) -> Profile:
+        if current_user.role not in roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Accès refusé — rôle insuffisant",
+                detail=f"Rôle requis : {[r.value for r in roles]}",
             )
         return current_user
     return checker
