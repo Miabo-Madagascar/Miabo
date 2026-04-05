@@ -1,0 +1,55 @@
+{
+  "nav": {
+    "search": "Rechercher un tuteur",
+    "login": "Connexion",
+    "register": "Inscription",
+    "logout": "Déconnexion",
+    "dashboard": "Tableau de bord",
+    "sessions": "Sessions",
+    "messages": "Messages",
+    "profile": "Profil"
+  },
+  "auth": {
+    "login_title": "Connexion à MIABO",
+    "register_title": "Créer un compte",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "full_name": "Nom complet",
+    "role": "Vous êtes",
+    "role_student": "Élève",
+    "role_tutor": "Tuteur",
+    "role_parent": "Parent",
+    "submit_login": "Se connecter",
+    "submit_register": "S'inscrire",
+    "no_account": "Pas encore de compte ?",
+    "has_account": "Déjà un compte ?",
+    "error_invalid": "Email ou mot de passe incorrect",
+    "error_generic": "Une erreur est survenue"
+  },
+  "dashboard": {
+    "welcome": "Bonjour, {name} !",
+    "next_session": "Prochaine session",
+    "no_session": "Aucune session à venir",
+    "stats": {
+      "hours": "Heures de tutorat",
+      "sessions": "Sessions complétées",
+      "rating": "Note moyenne",
+      "balance": "Solde wallet"
+    }
+  },
+  "sessions": {
+    "title": "Mes sessions",
+    "status_pending": "En attente",
+    "status_confirmed": "Confirmée",
+    "status_completed": "Terminée",
+    "status_cancelled": "Annulée",
+    "book": "Réserver",
+    "confirm": "Confirmer",
+    "cancel": "Annuler"
+  },
+  "errors": {
+    "not_found": "Page introuvable",
+    "unauthorized": "Accès non autorisé",
+    "server": "Erreur serveur"
+  }
+}

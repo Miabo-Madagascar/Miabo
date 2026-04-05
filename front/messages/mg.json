@@ -1,0 +1,55 @@
+{
+  "nav": {
+    "search": "Hikaroka mpampianatra",
+    "login": "Hiditra",
+    "register": "Misoratra anarana",
+    "logout": "Hivoaka",
+    "dashboard": "Latabatra fampisehoana",
+    "sessions": "Fianaran-tena",
+    "messages": "Hafatra",
+    "profile": "Mombamomba anao"
+  },
+  "auth": {
+    "login_title": "Hiditra ao MIABO",
+    "register_title": "Mamorona kaonty",
+    "email": "Adiresy mailaka",
+    "password": "Teny miafina",
+    "full_name": "Anarana feno",
+    "role": "Ianao dia",
+    "role_student": "Mpianatra",
+    "role_tutor": "Mpampianatra",
+    "role_parent": "Ray aman-dreny",
+    "submit_login": "Hiditra",
+    "submit_register": "Misoratra",
+    "no_account": "Tsy manana kaonty ?",
+    "has_account": "Manana kaonty sahady ?",
+    "error_invalid": "Tsy mety ny mailaka na teny miafina",
+    "error_generic": "Nisy hadisoana nitranga"
+  },
+  "dashboard": {
+    "welcome": "Manao ahoana, {name}!",
+    "next_session": "Fihaonana manaraka",
+    "no_session": "Tsy misy fihaonana ho avy",
+    "stats": {
+      "hours": "Ora fanampiana",
+      "sessions": "Fihaonana vita",
+      "rating": "Tombana tsotsotra",
+      "balance": "Vola ao amin'ny wallet"
+    }
+  },
+  "sessions": {
+    "title": "Ny fianaran-tenako",
+    "status_pending": "Miandry",
+    "status_confirmed": "Voamarina",
+    "status_completed": "Vita",
+    "status_cancelled": "Foana",
+    "book": "Mihantsy",
+    "confirm": "Manamarina",
+    "cancel": "Foana"
+  },
+  "errors": {
+    "not_found": "Tsy hita ny pejy",
+    "unauthorized": "Tsy manana alalana",
+    "server": "Hadisoana ao amin'ny serv"
+  }
+}
