@@ -1,10 +1,11 @@
 "use client"
 /**
  * TutorSearchClient — recherche de tuteurs avec filtres en temps réel.
- * Appelle GET /api/backend/tutors/search avec les paramètres de filtre.
+ * Route publique — pas de token requis.
  */
 
 import { useState, useEffect, useCallback } from "react"
+import { api, ApiError } from "@/lib/api/client"
 import { TutorCard } from "./TutorCard"
 import { Input } from "@/components/ui/Input"
 import type { TutorCard as TutorCardType } from "@/types"
@@ -27,18 +28,17 @@ export function TutorSearchClient({ locale }: TutorSearchClientProps) {
       const params = new URLSearchParams()
       if (subject)  params.set("subject",  subject)
       if (location) params.set("location", location)
-
-      const res = await fetch(`/api/backend/tutors/search?${params}`)
-      if (!res.ok) throw new Error("Erreur lors de la recherche")
-      setTutors(await res.json())
-    } catch {
-      setError("Impossible de charger les tuteurs. Réessayez.")
+      const query = params.toString() ? `?${params}` : ""
+      const data  = await api.getPublic<TutorCardType[]>(`/tutors/search${query}`)
+      setTutors(data)
+    } catch (err) {
+      setError(err instanceof ApiError ? err.detail : "Impossible de charger les tuteurs.")
     } finally {
       setIsLoading(false)
     }
   }, [subject, location])
 
-  // Charge au montage puis à chaque changement de filtre (debounce 400ms)
+  // Debounce 400ms sur les filtres
   useEffect(() => {
     const timer = setTimeout(fetchTutors, 400)
     return () => clearTimeout(timer)
@@ -47,9 +47,7 @@ export function TutorSearchClient({ locale }: TutorSearchClientProps) {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
-          Trouver un tuteur
-        </h1>
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Trouver un tuteur</h1>
         <p className="mt-1 text-sm text-[var(--text-secondary)]">
           Tuteurs certifiés CANOPE, disponibles à Madagascar.
         </p>
@@ -73,9 +71,7 @@ export function TutorSearchClient({ locale }: TutorSearchClientProps) {
 
       {/* ── Résultats ─────────────────────────────────────────────── */}
       {error && (
-        <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-[var(--color-error)]">
-          {error}
-        </p>
+        <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-[var(--color-error)]">{error}</p>
       )}
 
       {isLoading ? (

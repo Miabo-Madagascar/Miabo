@@ -2,14 +2,14 @@
 /**
  * SessionDetailClient — détail d'une session avec actions contextuelles.
  * Le tuteur peut confirmer/refuser. Le parent peut approuver.
- * Tout le monde peut annuler (selon statut).
+ * L'élève peut payer une session confirmée. Tout le monde peut annuler.
  */
 
 import { useState, useEffect, useCallback } from "react"
-import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
+import { api, ApiError } from "@/lib/api/client"
 import { SessionStatusBadge } from "./SessionStatusBadge"
 import { Button } from "@/components/ui/Button"
+import { PaymentForm } from "@/components/payment/PaymentForm"
 import { SessionStatus } from "@/types"
 import { useAuth } from "@/hooks/useAuth"
 import { UserRole } from "@/types"
@@ -20,55 +20,41 @@ interface SessionDetailClientProps {
 }
 
 export function SessionDetailClient({ sessionId, locale }: SessionDetailClientProps) {
-  const router   = useRouter()
-  const supabase = createClient()
   const { profile } = useAuth()
 
-  const [session,   setSession]   = useState<any>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [session,       setSession]       = useState<any>(null)
+  const [isLoading,     setIsLoading]     = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
-  const [error,     setError]     = useState<string | null>(null)
+  const [error,         setError]         = useState<string | null>(null)
+  const [showPayment,   setShowPayment]   = useState(false)
 
   const load = useCallback(async () => {
     setIsLoading(true)
+    setError(null)
     try {
-      const { data: { session: auth } } = await supabase.auth.getSession()
-      const token = auth?.access_token
-      const res = await fetch(`/api/backend/sessions/${sessionId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!res.ok) throw new Error("Session introuvable")
-      setSession(await res.json())
-    } catch {
-      setError("Impossible de charger cette session.")
+      const data = await api.get<any>(`/sessions/${sessionId}`)
+      setSession(data)
+    } catch (err) {
+      setError(err instanceof ApiError ? err.detail : "Impossible de charger cette session.")
     } finally {
       setIsLoading(false)
     }
-  }, [sessionId, supabase])
+  }, [sessionId])
 
   useEffect(() => { load() }, [load])
 
-  async function callAction(endpoint: string, method = "PUT", body?: object) {
+  async function callAction(endpoint: string, method: "PUT" | "POST" = "PUT", body?: object) {
     setActionLoading(true)
     setError(null)
     try {
-      const { data: { session: auth } } = await supabase.auth.getSession()
-      const token = auth?.access_token
-      const res = await fetch(`/api/backend/sessions/${sessionId}/${endpoint}`, {
-        method,
-        headers: {
-          "Content-Type":  "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: body ? JSON.stringify(body) : undefined,
-      })
-      if (!res.ok) {
-        const d = await res.json()
-        throw new Error(d.detail ?? "Erreur")
+      if (method === "PUT") {
+        await api.put(`/sessions/${sessionId}/${endpoint}`, body)
+      } else {
+        await api.post(`/sessions/${sessionId}/${endpoint}`, body)
       }
       await load()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur inattendue")
+      setError(err instanceof ApiError ? err.detail : "Erreur inattendue")
     } finally {
       setActionLoading(false)
     }
@@ -85,10 +71,12 @@ export function SessionDetailClient({ sessionId, locale }: SessionDetailClientPr
   const timeStr = date.toLocaleTimeString("fr-MG", { hour: "2-digit", minute: "2-digit" })
   const role    = profile?.role as UserRole | undefined
 
-  const isTutor   = role === UserRole.Tutor  && profile?.id === session.tutor?.id
+  const isTutor   = role === UserRole.Tutor   && profile?.id === session.tutor?.id
+  const isStudent = role === UserRole.Student  && profile?.id === session.student?.id
   const isParent  = role === UserRole.Parent
   const canCancel = [SessionStatus.PendingParent, SessionStatus.PendingTutor, SessionStatus.Confirmed]
     .includes(session.status as SessionStatus)
+  const canPay    = isStudent && session.status === SessionStatus.Confirmed && !session.payment_id
 
   return (
     <div className="flex flex-col gap-6">
@@ -107,11 +95,11 @@ export function SessionDetailClient({ sessionId, locale }: SessionDetailClientPr
 
       {/* ── Infos ──────────────────────────────────────────────── */}
       <div className="grid gap-4 rounded-xl bg-[var(--bg-base)] p-5 shadow-[var(--shadow-sm)] sm:grid-cols-2">
-        <Detail label="Élève"     value={session.student?.full_name ?? "—"} />
-        <Detail label="Tuteur"    value={session.tutor?.full_name   ?? "—"} />
-        <Detail label="Durée"     value={`${session.duration_minutes / 60}h`} />
-        <Detail label="Format"    value={session.mode === "online" ? "En ligne" : "Présentiel"} />
-        <Detail label="Montant"   value={`${session.amount_ariary?.toLocaleString("fr-MG")} Ar`} />
+        <Detail label="Élève"   value={session.student?.full_name ?? "—"} />
+        <Detail label="Tuteur"  value={session.tutor?.full_name   ?? "—"} />
+        <Detail label="Durée"   value={`${session.duration_minutes / 60}h`} />
+        <Detail label="Format"  value={session.mode === "online" ? "En ligne" : "Présentiel"} />
+        <Detail label="Montant" value={`${session.amount_ariary?.toLocaleString("fr-MG")} Ar`} />
         {session.student_objectives && (
           <Detail label="Objectifs" value={session.student_objectives} />
         )}
@@ -125,19 +113,12 @@ export function SessionDetailClient({ sessionId, locale }: SessionDetailClientPr
       {/* ── Actions tuteur ─────────────────────────────────────── */}
       {isTutor && session.status === SessionStatus.PendingTutor && (
         <div className="flex gap-3">
-          <Button
-            className="flex-1"
-            isLoading={actionLoading}
-            onClick={() => callAction("confirm", "PUT", { accepted: true })}
-          >
+          <Button className="flex-1" isLoading={actionLoading}
+            onClick={() => callAction("confirm", "PUT", { accepted: true })}>
             Accepter
           </Button>
-          <Button
-            variant="danger"
-            className="flex-1"
-            isLoading={actionLoading}
-            onClick={() => callAction("confirm", "PUT", { accepted: false })}
-          >
+          <Button variant="danger" className="flex-1" isLoading={actionLoading}
+            onClick={() => callAction("confirm", "PUT", { accepted: false })}>
             Refuser
           </Button>
         </div>
@@ -146,31 +127,36 @@ export function SessionDetailClient({ sessionId, locale }: SessionDetailClientPr
       {/* ── Actions parent ─────────────────────────────────────── */}
       {isParent && session.status === SessionStatus.PendingParent && (
         <div className="flex gap-3">
-          <Button
-            className="flex-1"
-            isLoading={actionLoading}
-            onClick={() => callAction("approve?approved=true")}
-          >
+          <Button className="flex-1" isLoading={actionLoading}
+            onClick={() => callAction("approve?approved=true")}>
             Approuver
           </Button>
-          <Button
-            variant="danger"
-            className="flex-1"
-            isLoading={actionLoading}
-            onClick={() => callAction("approve?approved=false")}
-          >
+          <Button variant="danger" className="flex-1" isLoading={actionLoading}
+            onClick={() => callAction("approve?approved=false")}>
             Refuser
           </Button>
         </div>
       )}
 
+      {/* ── Paiement élève ─────────────────────────────────────── */}
+      {canPay && !showPayment && (
+        <Button onClick={() => setShowPayment(true)}>Payer cette session</Button>
+      )}
+      {canPay && showPayment && (
+        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-base)] p-5">
+          <h3 className="mb-4 font-semibold text-[var(--text-primary)]">Paiement</h3>
+          <PaymentForm
+            sessionId={sessionId}
+            amountAriary={session.amount_ariary}
+            onSuccess={() => { setShowPayment(false); load() }}
+          />
+        </div>
+      )}
+
       {/* ── Annulation ─────────────────────────────────────────── */}
       {canCancel && (
-        <Button
-          variant="outline"
-          isLoading={actionLoading}
-          onClick={() => callAction("cancel")}
-        >
+        <Button variant="outline" isLoading={actionLoading}
+          onClick={() => callAction("cancel")}>
           Annuler la session
         </Button>
       )}

@@ -47,6 +47,14 @@ export function RegisterForm({ locale }: RegisterFormProps) {
       return
     }
 
+    // Supabase retourne identities:[] quand l'email existe déjà mais n'est pas confirmé,
+    // sans retourner d'erreur — on doit le détecter manuellement.
+    if (data.user.identities?.length === 0) {
+      setError("Un compte avec cet email existe déjà. Consultez votre boîte mail ou connectez-vous.")
+      setIsLoading(false)
+      return
+    }
+
     if (!data.session) {
       // Email de confirmation requis — le profil est déjà créé en BDD
       setError(

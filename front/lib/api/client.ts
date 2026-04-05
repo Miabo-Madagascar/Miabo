@@ -1,54 +1,101 @@
 /**
- * Client HTTP FastAPI — wrapper autour de fetch().
- * Utilise /api/backend/* (proxifié par Next.js vers FastAPI).
- * L'URL réelle du backend n'est jamais exposée au navigateur.
+ * Client HTTP FastAPI — unique source de vérité pour tous les appels API.
+ * - Gère le token Supabase automatiquement (lecture directe depuis getSession)
+ * - Lance une ApiError typée en cas d'échec
+ * - Utilise le proxy Next.js (/api/backend/*) — jamais d'URL backend directe
+ *
+ * Usage : import { api } from "@/lib/api/client"
+ *   api.get<Session[]>("/sessions/")
+ *   api.post<Payment>("/payments/mvola/initiate", { ... })
  */
 
 import { createClient } from "@/lib/supabase/client"
 
-/** Préfixe proxy — défini dans next.config.ts rewrites */
 const API_BASE = "/api/backend"
 
-export interface ApiError {
-  detail: string
-  status: number
+// ── Erreur typée ────────────────────────────────────────────────────────────
+
+export class ApiError extends Error {
+  constructor(
+    public readonly status:  number,
+    public readonly detail:  string,
+  ) {
+    super(detail)
+    this.name = "ApiError"
+  }
 }
 
-async function getAuthHeader(): Promise<Record<string, string>> {
+// ── Token Supabase ──────────────────────────────────────────────────────────
+// Lecture directe depuis les cookies via getSession() — source de vérité,
+// indépendante du cache _accessToken de useAuth (évite la race condition).
+
+async function getToken(): Promise<string | null> {
   const supabase = createClient()
   const { data: { session } } = await supabase.auth.getSession()
-  if (session?.access_token) {
-    return { Authorization: `Bearer ${session.access_token}` }
-  }
-  return {}
+  return session?.access_token ?? null
 }
 
-export async function apiFetch<T>(
-  path: string,
-  options: RequestInit = {}
+// ── Fetch central ───────────────────────────────────────────────────────────
+
+async function request<T>(
+  path:    string,
+  options: RequestInit = {},
+  auth     = true,      // false uniquement pour les routes publiques
 ): Promise<T> {
-  const authHeader = await getAuthHeader()
-
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeader,
-      ...options.headers,
-    },
-  })
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: "Erreur réseau" }))
-    throw { detail: error.detail ?? "Erreur serveur", status: response.status } satisfies ApiError
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(options.headers as Record<string, string>),
   }
 
-  return response.json() as Promise<T>
+  if (auth) {
+    const token = await getToken()
+    if (!token) {
+      // Redirige vers login si pas de session — évite un 401 silencieux
+      if (typeof window !== "undefined") {
+        const locale = window.location.pathname.split("/")[1] ?? "fr"
+        window.location.href = `/${locale}/auth/login`
+      }
+      throw new ApiError(401, "Non authentifié — redirection vers login")
+    }
+    headers["Authorization"] = `Bearer ${token}`
+  }
+
+  const res = await fetch(`${API_BASE}${path}`, { ...options, headers })
+
+  if (!res.ok) {
+    let detail = `Erreur ${res.status}`
+    try {
+      const body = await res.json()
+      detail = body.detail ?? detail
+    } catch { /* réponse non-JSON */ }
+    throw new ApiError(res.status, detail)
+  }
+
+  // 204 No Content → retourner null
+  if (res.status === 204) return null as T
+  return res.json() as Promise<T>
 }
+
+// ── API client exporté ──────────────────────────────────────────────────────
 
 export const api = {
-  get:    <T>(path: string)                => apiFetch<T>(path),
-  post:   <T>(path: string, body: unknown) => apiFetch<T>(path, { method: "POST",  body: JSON.stringify(body) }),
-  put:    <T>(path: string, body: unknown) => apiFetch<T>(path, { method: "PUT",   body: JSON.stringify(body) }),
-  delete: <T>(path: string)               => apiFetch<T>(path, { method: "DELETE" }),
+  /** GET authentifié */
+  get: <T>(path: string) =>
+    request<T>(path, { method: "GET" }),
+
+  /** GET public (pas de token requis) */
+  getPublic: <T>(path: string) =>
+    request<T>(path, { method: "GET" }, false),
+
+  /** POST authentifié */
+  post: <T>(path: string, body?: unknown) =>
+    request<T>(path, { method: "POST", body: body ? JSON.stringify(body) : undefined }),
+
+  /** PUT authentifié */
+  put: <T>(path: string, body?: unknown) =>
+    request<T>(path, { method: "PUT", body: body ? JSON.stringify(body) : undefined }),
+
+  /** DELETE authentifié */
+  delete: <T>(path: string) =>
+    request<T>(path, { method: "DELETE" }),
 }

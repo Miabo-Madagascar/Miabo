@@ -6,23 +6,27 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
+import { api, ApiError } from "@/lib/api/client"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
-import type { TutorCard } from "@/types"
 
 interface BookingWizardProps {
-  tutor:  TutorCard
-  locale: string
+  tutorId:    string
+  tutorName:  string
+  hourlyRate: number
+  locale:     string
+  onSuccess?: () => void
+  /** Matières suggérées (optionnel) */
+  subjects?:  string[]
 }
 
 interface BookingForm {
-  subject:         string
-  scheduled_date:  string
-  scheduled_time:  string
+  subject:          string
+  scheduled_date:   string
+  scheduled_time:   string
   duration_minutes: 60 | 90 | 120 | 180
-  mode:            "online" | "in_person"
-  notes:           string
+  mode:             "online" | "in_person"
+  notes:            string
 }
 
 const DURATIONS: { value: 60 | 90 | 120 | 180; label: string }[] = [
@@ -34,16 +38,17 @@ const DURATIONS: { value: 60 | 90 | 120 | 180; label: string }[] = [
 
 const TOTAL_STEPS = 4
 
-export function BookingWizard({ tutor, locale }: BookingWizardProps) {
-  const router   = useRouter()
-  const supabase = createClient()
+export function BookingWizard({
+  tutorId, tutorName, hourlyRate, locale, onSuccess, subjects = [],
+}: BookingWizardProps) {
+  const router = useRouter()
 
-  const [step, setStep]       = useState(1)
-  const [error, setError]     = useState<string | null>(null)
+  const [step,    setStep]    = useState(1)
+  const [error,   setError]   = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   const [form, setForm] = useState<BookingForm>({
-    subject:          tutor.subjects[0] ?? "",
+    subject:          subjects[0] ?? "",
     scheduled_date:   "",
     scheduled_time:   "14:00",
     duration_minutes: 60,
@@ -54,45 +59,33 @@ export function BookingWizard({ tutor, locale }: BookingWizardProps) {
   const set = <K extends keyof BookingForm>(k: K, v: BookingForm[K]) =>
     setForm((prev) => ({ ...prev, [k]: v }))
 
-  const amountAriary = Math.round(tutor.hourly_rate * form.duration_minutes / 60)
+  const amountAriary = Math.round(hourlyRate * form.duration_minutes / 60)
 
   async function handleSubmit() {
     setLoading(true)
     setError(null)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const token = session?.access_token
-      if (!token) throw new Error("Non connecté")
-
       const scheduledAt = new Date(
         `${form.scheduled_date}T${form.scheduled_time}:00`
       ).toISOString()
 
-      const res = await fetch("/api/backend/sessions/", {
-        method: "POST",
-        headers: {
-          "Content-Type":  "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          tutor_id:         tutor.id,
-          subject:          form.subject,
-          scheduled_at:     scheduledAt,
-          duration_minutes: form.duration_minutes,
-          mode:             form.mode,
-          notes:            form.notes || null,
-        }),
+      await api.post("/sessions/", {
+        tutor_id:         tutorId,
+        subject:          form.subject,
+        scheduled_at:     scheduledAt,
+        duration_minutes: form.duration_minutes,
+        mode:             form.mode,
+        notes:            form.notes || null,
       })
 
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.detail ?? "Erreur lors de la réservation")
+      if (onSuccess) {
+        onSuccess()
+      } else {
+        router.push(`/${locale}/sessions`)
+        router.refresh()
       }
-
-      router.push(`/${locale}/sessions`)
-      router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur inattendue")
+      setError(err instanceof ApiError ? err.detail : "Erreur lors de la réservation")
     } finally {
       setLoading(false)
     }
@@ -126,23 +119,24 @@ export function BookingWizard({ tutor, locale }: BookingWizardProps) {
       {step === 1 && (
         <div className="flex flex-col gap-4">
           <h2 className="font-semibold text-[var(--text-primary)]">Quelle matière ?</h2>
-          <div className="flex flex-wrap gap-2">
-            {tutor.subjects.map((s) => (
-              <button
-                key={s}
-                onClick={() => set("subject", s)}
-                className={[
-                  "rounded-lg border px-4 py-2 text-sm font-medium transition-colors",
-                  form.subject === s
-                    ? "border-[var(--color-primary-500)] bg-[var(--color-primary-50)] text-[var(--color-primary-700)]"
-                    : "border-[var(--border-default)] text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]",
-                ].join(" ")}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-          {tutor.subjects.length === 0 && (
+          {subjects.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {subjects.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => set("subject", s)}
+                  className={[
+                    "rounded-lg border px-4 py-2 text-sm font-medium transition-colors",
+                    form.subject === s
+                      ? "border-[var(--color-primary-500)] bg-[var(--color-primary-50)] text-[var(--color-primary-700)]"
+                      : "border-[var(--border-default)] text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]",
+                  ].join(" ")}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          ) : (
             <Input
               label="Matière"
               value={form.subject}
@@ -222,8 +216,8 @@ export function BookingWizard({ tutor, locale }: BookingWizardProps) {
       {step === 4 && (
         <div className="flex flex-col gap-4">
           <h2 className="font-semibold text-[var(--text-primary)]">Récapitulatif</h2>
-          <div className="rounded-xl bg-[var(--bg-subtle)] p-4 text-sm">
-            <p><span className="font-medium">Tuteur :</span> {tutor.full_name}</p>
+          <div className="rounded-xl bg-[var(--bg-subtle)] p-4 text-sm space-y-1">
+            <p><span className="font-medium">Tuteur :</span> {tutorName}</p>
             <p><span className="font-medium">Matière :</span> {form.subject}</p>
             <p><span className="font-medium">Date :</span> {form.scheduled_date} à {form.scheduled_time}</p>
             <p><span className="font-medium">Durée :</span> {DURATIONS.find(d => d.value === form.duration_minutes)?.label}</p>
@@ -257,7 +251,7 @@ export function BookingWizard({ tutor, locale }: BookingWizardProps) {
           <Button
             onClick={() => setStep(step + 1)}
             className="flex-1"
-            disabled={step === 1 && !form.subject || step === 2 && !form.scheduled_date}
+            disabled={(step === 1 && !form.subject) || (step === 2 && !form.scheduled_date)}
           >
             Suivant
           </Button>

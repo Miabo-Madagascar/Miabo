@@ -33,7 +33,7 @@ export function TutorCard({ tutor, locale }: TutorCardProps) {
             {tutor.canope_certified && (
               <>
                 <span>·</span>
-                <Badge variant="success" size="sm">CANOPE</Badge>
+                <Badge variant="success">CANOPE</Badge>
               </>
             )}
           </div>
@@ -50,10 +50,10 @@ export function TutorCard({ tutor, locale }: TutorCardProps) {
       {tutor.subjects.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {tutor.subjects.slice(0, 4).map((s) => (
-            <Badge key={s} variant="default" size="sm">{s}</Badge>
+            <Badge key={s} variant="default">{s}</Badge>
           ))}
           {tutor.subjects.length > 4 && (
-            <Badge variant="default" size="sm">+{tutor.subjects.length - 4}</Badge>
+            <Badge variant="default">+{tutor.subjects.length - 4}</Badge>
           )}
         </div>
       )}

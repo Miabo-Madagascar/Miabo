@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { api, ApiError } from "@/lib/api/client"
 import { SessionCard } from "./SessionCard"
 import { useAuth } from "@/hooks/useAuth"
 import { UserRole } from "@/types"
@@ -17,7 +17,6 @@ type ViewRole = "student" | "tutor" | "parent" | "admin"
 
 export function SessionListClient({ locale }: SessionListClientProps) {
   const { profile } = useAuth()
-  const supabase    = createClient()
 
   const [sessions,  setSessions]  = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -26,53 +25,39 @@ export function SessionListClient({ locale }: SessionListClientProps) {
   useEffect(() => {
     async function load() {
       setIsLoading(true)
+      setError(null)
       try {
-        const { data: { session } } = await supabase.auth.getSession()
-        const token = session?.access_token
-        if (!token) throw new Error("Non connecté")
-
-        const res = await fetch("/api/backend/sessions/", {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        if (!res.ok) throw new Error("Erreur de chargement")
-        setSessions(await res.json())
-      } catch {
-        setError("Impossible de charger vos sessions.")
+        const data = await api.get<any[]>("/sessions/")
+        setSessions(data)
+      } catch (err) {
+        const msg = err instanceof ApiError ? err.detail : "Impossible de charger vos sessions."
+        setError(msg)
       } finally {
         setIsLoading(false)
       }
     }
     load()
-  }, [supabase])
+  }, [])
 
-  const viewAs: ViewRole =
-    (profile?.role as ViewRole | undefined) ?? "student"
+  const viewAs: ViewRole = (profile?.role as ViewRole | undefined) ?? "student"
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col gap-3">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-28 animate-pulse rounded-xl bg-[var(--bg-muted)]" />
-        ))}
-      </div>
-    )
-  }
+  if (isLoading) return (
+    <div className="flex flex-col gap-3">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="h-28 animate-pulse rounded-xl bg-[var(--bg-muted)]" />
+      ))}
+    </div>
+  )
 
-  if (error) {
-    return (
-      <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-[var(--color-error)]">
-        {error}
-      </p>
-    )
-  }
+  if (error) return (
+    <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-[var(--color-error)]">{error}</p>
+  )
 
-  if (sessions.length === 0) {
-    return (
-      <div className="rounded-xl border border-dashed border-[var(--border-default)] p-10 text-center text-[var(--text-secondary)]">
-        Aucune session pour le moment.
-      </div>
-    )
-  }
+  if (sessions.length === 0) return (
+    <div className="rounded-xl border border-dashed border-[var(--border-default)] p-10 text-center text-[var(--text-secondary)]">
+      Aucune session pour le moment.
+    </div>
+  )
 
   return (
     <div className="flex flex-col gap-3">

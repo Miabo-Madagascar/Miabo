@@ -61,3 +61,5 @@ app.include_router(reports.router,     prefix=API_PREFIX)
 async def health_check():
     """Endpoint de santé — utilisé par le load balancer."""
     return {"status": "ok", "version": "2.0.0"}
+
+

@@ -1,12 +1,14 @@
 "use client"
 /**
- * Hook useAuth — session Supabase, profil utilisateur, actions auth.
- * À utiliser uniquement dans les Client Components.
+ * Hook useAuth — session Supabase + profil FastAPI.
+ * Source unique de vérité pour l'état d'authentification.
+ * Utilise le singleton Supabase et le client API centralisé.
  */
 
 import { useEffect, useState, useCallback } from "react"
 import type { User, Session } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/client"
+import { api, ApiError } from "@/lib/api/client"
 import type { Profile } from "@/types"
 import type { UserRole } from "@/types"
 
@@ -19,7 +21,7 @@ interface AuthState {
 }
 
 interface UseAuthReturn extends AuthState {
-  signOut:   () => Promise<void>
+  signOut:        () => Promise<void>
   refreshProfile: () => Promise<void>
 }
 
@@ -34,51 +36,49 @@ export function useAuth(): UseAuthReturn {
     isLoading: true,
   })
 
-  // Charge le profil depuis la BDD via FastAPI
-  const loadProfile = useCallback(async (userId: string) => {
+  // Charge le profil depuis FastAPI via le client centralisé
+  const loadProfile = useCallback(async (): Promise<Profile | null> => {
     try {
-      const token = (await supabase.auth.getSession()).data.session?.access_token
-      const res = await fetch("/api/backend/profiles/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!res.ok) return null
-      return (await res.json()) as Profile
-    } catch {
+      return await api.get<Profile>("/profiles/me")
+    } catch (err) {
+      // 401 = pas encore connecté — pas une erreur à logger
+      if (err instanceof ApiError && err.status === 401) return null
+      console.error("[useAuth] Erreur chargement profil:", err)
       return null
     }
-  }, [supabase])
+  }, [])
+
+  const applySession = useCallback(async (session: Session | null) => {
+    // Le client API récupère maintenant le token directement via getSession()
+    // pour éviter les race conditions avec un cache en mémoire.
+    const profile = session ? await loadProfile() : null
+    setState({
+      user:      session?.user ?? null,
+      session,
+      profile,
+      role:      (profile?.role ?? null) as UserRole | null,
+      isLoading: false,
+    })
+  }, [loadProfile])
 
   const refreshProfile = useCallback(async () => {
-    if (!state.user) return
-    const profile = await loadProfile(state.user.id)
-    setState((prev) => ({ ...prev, profile, role: (profile?.role ?? null) as UserRole | null }))
-  }, [state.user, loadProfile])
+    const profile = await loadProfile()
+    setState((prev) => ({
+      ...prev,
+      profile,
+      role: (profile?.role ?? null) as UserRole | null,
+    }))
+  }, [loadProfile])
 
   useEffect(() => {
-    // Charge la session initiale
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      const profile = session ? await loadProfile(session.user.id) : null
-      setState({
-        user:      session?.user ?? null,
-        session,
-        profile,
-        role:      (profile?.role ?? null) as UserRole | null,
-        isLoading: false,
-      })
+    // Session initiale depuis les cookies/localStorage
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      applySession(session)
     })
 
-    // Ecoute les changements de session (login / logout / refresh)
+    // Changements de session : login, logout, refresh du token
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_, session) => {
-        const profile = session ? await loadProfile(session.user.id) : null
-        setState({
-          user:      session?.user ?? null,
-          session,
-          profile,
-          role:      (profile?.role ?? null) as UserRole | null,
-          isLoading: false,
-        })
-      }
+      (_, session) => { applySession(session) }
     )
 
     return () => subscription.unsubscribe()

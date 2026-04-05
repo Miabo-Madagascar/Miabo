@@ -161,13 +161,16 @@ cd back && pytest
 ## Proxy API — règle absolue
 
 Le front n'appelle **jamais** FastAPI directement.
-Tous les appels passent par le proxy Next.js défini dans `front/next.config.ts` :
+Tous les appels passent par le proxy Route Handler Next.js défini dans `front/app/api/backend/[...path]/route.ts` :
 
 ```
 Navigateur → /api/backend/:path*
-                  ↓ (next.config.ts, côté serveur)
+                  ↓ (Route Handler, côté serveur)
              ${API_URL}/api/v1/:path*   (FastAPI)
 ```
+
+- Ce proxy gère les redirections (`307/308`) du backend en interne pour préserver le header `Authorization`.
+- Utiliser `api.get/post/put/delete()` depuis `@/lib/api/client` — jamais `fetch()` brut vers FastAPI
 
 - Utiliser `api.get/post/put/delete()` depuis `@/lib/api/client` — jamais `fetch()` brut vers FastAPI
 - Ne **jamais** créer de variable `NEXT_PUBLIC_API_URL` — l'URL backend est serveur uniquement
