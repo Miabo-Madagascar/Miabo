@@ -12,7 +12,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 
-const BACKEND_URL = process.env.API_URL ?? "http://localhost:8000"
+const BACKEND_URL = process.env.API_URL ?? "http://127.0.0.1:8000"
 
 async function handler(
   request: NextRequest,
@@ -21,37 +21,63 @@ async function handler(
   const { path } = await params
 
   // Reconstruit l'URL backend : /api/backend/xxx -> /api/v1/xxx
-  const targetPath = "/" + path.join("/")
-  const search     = request.nextUrl.search   // query string (?status=pending…)
+  let targetPath = "/" + path.join("/")
+  
+  // Correction spécifique pour FastAPI : si le path se termine par /messages (POST)
+  // il faut impérativement un slash sinon il redirige (307/308) et fetch perd le body.
+  if (targetPath === "/messages" && request.method === "POST") {
+    targetPath = "/messages/"
+  }
+
+  const search     = request.nextUrl.search
   const targetUrl  = `${BACKEND_URL}/api/v1${targetPath}${search}`
 
-  // Recopie tous les headers sauf host (qui doit pointer vers le backend)
-  const headers = new Headers(request.headers)
-  headers.delete("host")
-
-  // On laisse fetch suivre les redirections INTERNELLEMENT (redirect: "follow").
-  // Ainsi, si FastAPI redirige /sessions -> /sessions/ (307/308),
-  // le proxy suit la redirection et renvoie directement le résultat final au navigateur.
-  // Cela évite que le navigateur reçoive le 307 vers le port 8000 et ne strippe le header Authorization.
-  const backendResponse = await fetch(targetUrl, {
-    method:   request.method,
-    headers,
-    body:     ["GET", "HEAD"].includes(request.method) ? undefined : request.body,
-    redirect: "follow",
-    // @ts-expect-error — duplex requis pour le streaming du body
-    duplex:   "half",
+  // Recopie les headers essentiels en évitant les conflits
+  const headers = new Headers()
+  const forbiddenHeaders = ["host", "content-length", "connection", "keep-alive"]
+  
+  request.headers.forEach((value, key) => {
+    if (!forbiddenHeaders.includes(key.toLowerCase())) {
+      headers.set(key, value)
+    }
   })
 
-  // Construit la réponse Next en recopiant status + headers backend
-  const responseHeaders = new Headers(backendResponse.headers)
-  // Supprime le transfer-encoding pour éviter les erreurs de décodage
-  responseHeaders.delete("transfer-encoding")
+  // On bufferise le body pour pouvoir le re-transmettre en cas de redirection (307/308).
+  const requestBody = ["GET", "HEAD"].includes(request.method)
+    ? undefined
+    : await request.arrayBuffer()
 
-  return new NextResponse(backendResponse.body, {
-    status:  backendResponse.status,
-    headers: responseHeaders,
-  })
+  try {
+    const backendResponse = await fetch(targetUrl, {
+      method:   request.method,
+      headers,
+      body:     requestBody,
+      redirect: "follow",
+    })
+
+    // Construit la réponse Next en recopiant status + headers backend
+    const responseHeaders = new Headers(backendResponse.headers)
+    // Supprime le transfer-encoding pour éviter les erreurs de décodage
+    responseHeaders.delete("transfer-encoding")
+
+    return new NextResponse(backendResponse.body, {
+      status:  backendResponse.status,
+      headers: responseHeaders,
+    })
+  } catch (err: any) {
+    return new NextResponse(JSON.stringify({ 
+      detail: "Proxy Error", 
+      message: err.message 
+    }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    })
+  }
 }
+
+// Force le mode dynamique pour que Next.js ne mette pas en cache les réponses
+// (indispensable pour les flux SSE qui doivent rester ouverts).
+export const dynamic = "force-dynamic"
 
 export const GET     = handler
 export const POST    = handler

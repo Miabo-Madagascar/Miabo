@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { api, ApiError } from "@/lib/api/client"
 import { Badge } from "@/components/ui/Badge"
 import { Button } from "@/components/ui/Button"
@@ -31,10 +32,13 @@ interface TutorDetail {
 }
 
 export function TutorPublicProfile({ tutorId, locale }: TutorPublicProfileProps) {
-  const [tutor,       setTutor]       = useState<TutorDetail | null>(null)
-  const [isLoading,   setIsLoading]   = useState(true)
-  const [error,       setError]       = useState<string | null>(null)
-  const [showBooking, setShowBooking] = useState(false)
+  const router = useRouter()
+
+  const [tutor,        setTutor]        = useState<TutorDetail | null>(null)
+  const [isLoading,    setIsLoading]    = useState(true)
+  const [error,        setError]        = useState<string | null>(null)
+  const [showBooking,  setShowBooking]  = useState(false)
+  const [contacting,   setContacting]   = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -110,11 +114,31 @@ export function TutorPublicProfile({ tutorId, locale }: TutorPublicProfileProps)
         </div>
       )}
 
-      {/* ── Réservation ─────────────────────────────────────────── */}
+      {/* ── Actions ─────────────────────────────────────────────── */}
       {!showBooking ? (
-        <Button onClick={() => setShowBooking(true)} className="mt-2">
-          Réserver une session
-        </Button>
+        <div className="flex gap-3 mt-2">
+          <Button onClick={() => setShowBooking(true)} className="flex-1">
+            Réserver une session
+          </Button>
+          <Button
+            variant="outline"
+            className="flex-1"
+            isLoading={contacting}
+            onClick={async () => {
+              setContacting(true)
+              try {
+                const conv = await api.post<{ id: string }>("/messages/conversations", {
+                  other_user_id: tutorId,
+                })
+                router.push(`/${locale}/messages/${conv.id}`)
+              } catch {
+                setContacting(false)
+              }
+            }}
+          >
+            Contacter
+          </Button>
+        </div>
       ) : (
         <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-base)] p-5">
           <div className="mb-4 flex items-center justify-between">

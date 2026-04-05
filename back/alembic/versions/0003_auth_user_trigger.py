@@ -68,9 +68,9 @@ BEGIN
 
   ELSIF v_role = 'tutor' THEN
     INSERT INTO public.tutor_profiles (
-      id, profile_id, hourly_rate, subjects, grade_levels, teaching_methods
+      id, profile_id, hourly_rate, subjects, grade_levels, teaching_methods, validation_status
     )
-    VALUES (gen_random_uuid(), NEW.id, 5000, '{}', '{}', '{}')
+    VALUES (gen_random_uuid(), NEW.id, 5000, '{}', '{}', '{}', 'validated')
     ON CONFLICT DO NOTHING;
   END IF;
 

@@ -27,7 +27,7 @@ export function SessionListClient({ locale }: SessionListClientProps) {
       setIsLoading(true)
       setError(null)
       try {
-        const data = await api.get<any[]>("/sessions/")
+        const data = await api.get<any[]>("/sessions")
         setSessions(data)
       } catch (err) {
         const msg = err instanceof ApiError ? err.detail : "Impossible de charger vos sessions."

@@ -37,11 +37,16 @@ export default async function EleveDashboardPage({ params }: Props) {
           </p>
         </Link>
 
-        <div className="flex flex-col gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-base)] p-5 opacity-60">
-          <span className="text-2xl">🧠</span>
-          <h3 className="font-semibold text-[var(--text-primary)]">Tests d'orientation</h3>
-          <p className="text-sm text-[var(--text-secondary)]">VAK · RIASEC · DISC — Phase 3.</p>
-        </div>
+        <Link
+          href={`/${locale}/messages`}
+          className="flex flex-col gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-base)] p-5 hover:border-[var(--color-primary-300)] hover:shadow-[var(--shadow-sm)] transition-all"
+        >
+          <span className="text-2xl">💬</span>
+          <h3 className="font-semibold text-[var(--text-primary)]">Messages</h3>
+          <p className="text-sm text-[var(--text-secondary)]">
+            Échangez avec vos tuteurs.
+          </p>
+        </Link>
       </div>
     </div>
   )
