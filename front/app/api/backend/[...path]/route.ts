@@ -64,10 +64,11 @@ async function handler(
       status:  backendResponse.status,
       headers: responseHeaders,
     })
-  } catch (err: any) {
-    return new NextResponse(JSON.stringify({ 
-      detail: "Proxy Error", 
-      message: err.message 
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Unknown error"
+    return new NextResponse(JSON.stringify({
+      detail: "Proxy Error",
+      message,
     }), {
       status: 500,
       headers: { "Content-Type": "application/json" },

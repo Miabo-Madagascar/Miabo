@@ -7,7 +7,7 @@ import { useState, useEffect } from "react"
 import { api, ApiError } from "@/lib/api/client"
 import { SessionCard } from "./SessionCard"
 import { useAuth } from "@/hooks/useAuth"
-import { UserRole } from "@/types"
+import { SessionDetail } from "@/types"
 
 interface SessionListClientProps {
   locale: string
@@ -18,7 +18,7 @@ type ViewRole = "student" | "tutor" | "parent" | "admin"
 export function SessionListClient({ locale }: SessionListClientProps) {
   const { profile } = useAuth()
 
-  const [sessions,  setSessions]  = useState<any[]>([])
+  const [sessions,  setSessions]  = useState<SessionDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error,     setError]     = useState<string | null>(null)
 
@@ -27,7 +27,7 @@ export function SessionListClient({ locale }: SessionListClientProps) {
       setIsLoading(true)
       setError(null)
       try {
-        const data = await api.get<any[]>("/sessions")
+        const data = await api.get<SessionDetail[]>("/sessions")
         setSessions(data)
       } catch (err) {
         const msg = err instanceof ApiError ? err.detail : "Impossible de charger vos sessions."

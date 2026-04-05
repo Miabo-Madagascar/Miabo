@@ -5,6 +5,16 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    rules: {
+      // Convention TS : les paramètres préfixés par _ sont intentionnellement non utilisés
+      "@typescript-eslint/no-unused-vars": ["warn", {
+        argsIgnorePattern:         "^_",
+        varsIgnorePattern:         "^_",
+        caughtErrorsIgnorePattern: "^_",
+      }],
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

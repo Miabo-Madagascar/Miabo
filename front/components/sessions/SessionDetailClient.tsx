@@ -10,7 +10,7 @@ import { api, ApiError } from "@/lib/api/client"
 import { SessionStatusBadge } from "./SessionStatusBadge"
 import { Button } from "@/components/ui/Button"
 import { PaymentForm } from "@/components/payment/PaymentForm"
-import { SessionStatus } from "@/types"
+import { SessionStatus, SessionDetail } from "@/types"
 import { useAuth } from "@/hooks/useAuth"
 import { UserRole } from "@/types"
 
@@ -19,10 +19,10 @@ interface SessionDetailClientProps {
   locale:    string
 }
 
-export function SessionDetailClient({ sessionId, locale }: SessionDetailClientProps) {
+export function SessionDetailClient({ sessionId, locale: _locale }: SessionDetailClientProps) {
   const { profile } = useAuth()
 
-  const [session,       setSession]       = useState<any>(null)
+  const [session,       setSession]       = useState<SessionDetail | null>(null)
   const [isLoading,     setIsLoading]     = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
   const [error,         setError]         = useState<string | null>(null)
@@ -32,7 +32,7 @@ export function SessionDetailClient({ sessionId, locale }: SessionDetailClientPr
     setIsLoading(true)
     setError(null)
     try {
-      const data = await api.get<any>(`/sessions/${sessionId}`)
+      const data = await api.get<SessionDetail>(`/sessions/${sessionId}`)
       setSession(data)
     } catch (err) {
       setError(err instanceof ApiError ? err.detail : "Impossible de charger cette session.")

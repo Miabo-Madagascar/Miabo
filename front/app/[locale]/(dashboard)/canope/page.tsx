@@ -10,7 +10,7 @@ export default function CanopeDashboardPage() {
         Espace CANOPE
       </h1>
       <p className="mt-2 text-[var(--text-secondary)]">
-        TODO PHASE 3 : bilans d'orientation, ressources, élèves suivis.
+        TODO PHASE 3 : bilans d&apos;orientation, ressources, élèves suivis.
       </p>
     </div>
   )

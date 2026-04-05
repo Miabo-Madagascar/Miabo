@@ -14,7 +14,7 @@ interface ChatWindowWrapperProps {
   locale: string
 }
 
-export function ChatWindowWrapper({ convId, locale }: ChatWindowWrapperProps) {
+export function ChatWindowWrapper({ convId, locale: _locale }: ChatWindowWrapperProps) {
   const [conv,      setConv]      = useState<Conversation | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error,     setError]     = useState<string | null>(null)

@@ -3,9 +3,38 @@
  * Endpoints CDC §3.6 : /api/v1/sessions/, /api/v1/payments/, /api/v1/wallet/
  */
 
-import type { SessionDuration } from "./enums"
+import type { SessionDuration, SessionStatus } from "./enums"
 import type { Session } from "./db.sessions.types"
 import type { SessionWithParticipants, SessionFull } from "./relations.types"
+
+/** Participant minimal renvoyé par session_to_dict (backend) */
+export interface ProfileMini {
+  id:         string
+  full_name:  string
+  avatar_url: string | null
+}
+
+/**
+ * Réponse de GET /api/v1/sessions/{id} et GET /api/v1/sessions/
+ * Correspond à session_to_dict() du service backend.
+ */
+export interface SessionDetail {
+  id:                  string
+  status:              SessionStatus
+  subject:             string
+  mode:                "online" | "in_person"
+  scheduled_at:        string
+  duration_minutes:    number
+  amount_ariary:       number
+  student_objectives:  string | null
+  tutor_notes:         string | null
+  meeting_url:         string | null
+  parent_approved_at:  string | null
+  created_at:          string | null
+  payment_id?:         string | null
+  student:             ProfileMini | null
+  tutor:               ProfileMini | null
+}
 
 /** Réponse générique paginée (pagination curseur — CDC §3.4) */
 export interface PaginatedResponse<T> {
