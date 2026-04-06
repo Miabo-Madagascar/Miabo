@@ -1,0 +1,177 @@
+"""
+Service bilans d'orientation — VAK, RIASEC, DISC.
+Administrés par les acteurs CANOPE/COSP via leurs canope_profiles.
+"""
+
+import uuid
+from sqlalchemy.orm import Session as DbSession
+from fastapi import HTTPException, status
+
+from src.models.canope import Assessment
+from src.models.canope_users import CanopProfile
+from src.models.users import Profile
+from src.models.enums import AssessmentStatus
+from src.schemas.assessments import (
+    CreateAssessmentRequest, VakRequest, RiasecRequest,
+    DiscRequest, ValidateAssessmentRequest,
+)
+
+
+# ── Helpers calcul ────────────────────────────────────────────────────────────
+
+def _vak_dominant(v: int, a: int, k: int) -> str:
+    """Lettre dominante = score brut le plus élevé parmi V, A, K."""
+    return max(zip([v, a, k], ["V", "A", "K"]), key=lambda x: x[0])[1]
+
+
+def _riasec_code(scores: dict) -> str:
+    """Code 2 lettres = les 2 dimensions RIASEC avec les scores les plus hauts."""
+    top2 = sorted(scores, key=scores.get, reverse=True)[:2]
+    return "".join(top2)
+
+
+def _disc_dominant(scores: dict) -> str:
+    """Profil dominant DISC = dimension avec le score le plus élevé."""
+    return max(scores, key=scores.get)
+
+
+# ── Helpers BDD ───────────────────────────────────────────────────────────────
+
+def _get_canope_profile(db: DbSession, user: Profile) -> CanopProfile:
+    cp = db.query(CanopProfile).filter(CanopProfile.profile_id == user.id).first()
+    if not cp:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Profil CANOPE/COSP introuvable")
+    return cp
+
+
+def _get_assessment(db: DbSession, assessment_id: str, cp: CanopProfile) -> Assessment:
+    a = db.query(Assessment).filter(
+        Assessment.id == assessment_id,
+        Assessment.administered_by == cp.id,
+    ).first()
+    if not a:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Bilan introuvable")
+    return a
+
+
+def _to_dict(a: Assessment) -> dict:
+    return {
+        "id":                 str(a.id),
+        "administered_by":    str(a.administered_by),
+        "student_profile_id": str(a.student_profile_id) if a.student_profile_id else None,
+        "external_young_id":  str(a.external_young_id)  if a.external_young_id  else None,
+        "serie":              a.serie,
+        "career_interest":    a.career_interest,
+        "vak_v_score":        a.vak_v_score,
+        "vak_a_score":        a.vak_a_score,
+        "vak_k_score":        a.vak_k_score,
+        "vak_dominant":       a.vak_dominant,
+        "riasec_scores":      a.riasec_scores,
+        "riasec_code":        a.riasec_code,
+        "disc_scores":        a.disc_scores,
+        "disc_dominant":      a.disc_dominant,
+        "actor_comment":      a.actor_comment,
+        "status":             a.status.value,
+        "created_at":         a.created_at.isoformat() if a.created_at else None,
+        "validated_at":       a.validated_at.isoformat() if a.validated_at else None,
+    }
+
+
+# ── Service ───────────────────────────────────────────────────────────────────
+
+def list_assessments(db: DbSession, user: Profile) -> list[dict]:
+    """Bilans administrés par l'acteur connecté, du plus récent au plus ancien."""
+    cp   = _get_canope_profile(db, user)
+    rows = db.query(Assessment).filter(
+        Assessment.administered_by == cp.id
+    ).order_by(Assessment.created_at.desc()).all()
+    return [_to_dict(a) for a in rows]
+
+
+def create_assessment(db: DbSession, user: Profile, data: CreateAssessmentRequest) -> dict:
+    """Crée un bilan en brouillon (Option A : élève MIABO / Option B : jeune externe)."""
+    if (data.student_profile_id is None) == (data.external_young_id is None):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Renseignez student_profile_id OU external_young_id, pas les deux.",
+        )
+    cp = _get_canope_profile(db, user)
+    a  = Assessment(
+        id                 = uuid.uuid4(),
+        administered_by    = cp.id,
+        student_profile_id = data.student_profile_id,
+        external_young_id  = data.external_young_id,
+        serie              = data.serie,
+        career_interest    = data.career_interest,
+        status             = AssessmentStatus.draft,
+    )
+    db.add(a)
+    db.commit()
+    db.refresh(a)
+    return _to_dict(a)
+
+
+def submit_vak(db: DbSession, assessment_id: str, user: Profile, data: VakRequest) -> dict:
+    """Enregistre les scores VAK et calcule le profil dominant."""
+    cp = _get_canope_profile(db, user)
+    a  = _get_assessment(db, assessment_id, cp)
+    a.vak_v_score  = data.v_score
+    a.vak_a_score  = data.a_score
+    a.vak_k_score  = data.k_score
+    a.vak_dominant = _vak_dominant(data.v_score, data.a_score, data.k_score)
+    a.status       = AssessmentStatus.in_progress
+    db.commit()
+    db.refresh(a)
+    return _to_dict(a)
+
+
+def submit_riasec(db: DbSession, assessment_id: str, user: Profile, data: RiasecRequest) -> dict:
+    """Enregistre les scores RIASEC et calcule le code 2 lettres."""
+    cp     = _get_canope_profile(db, user)
+    a      = _get_assessment(db, assessment_id, cp)
+    scores = {"R": data.R, "I": data.I, "A": data.A, "S": data.S, "E": data.E, "C": data.C}
+    a.riasec_scores = scores
+    a.riasec_code   = _riasec_code(scores)
+    db.commit()
+    db.refresh(a)
+    return _to_dict(a)
+
+
+def submit_disc(db: DbSession, assessment_id: str, user: Profile, data: DiscRequest) -> dict:
+    """Enregistre les scores DISC et calcule le profil dominant."""
+    cp     = _get_canope_profile(db, user)
+    a      = _get_assessment(db, assessment_id, cp)
+    scores = {"D": data.D, "I": data.I, "S": data.S, "C": data.C}
+    a.disc_scores   = scores
+    a.disc_dominant = _disc_dominant(scores)
+    db.commit()
+    db.refresh(a)
+    return _to_dict(a)
+
+
+def validate_assessment(
+    db: DbSession, assessment_id: str, user: Profile, data: ValidateAssessmentRequest,
+) -> dict:
+    """Valide le bilan — le rend immuable (sauf Admin). Requiert VAK + RIASEC + DISC."""
+    from datetime import datetime, timezone
+    cp = _get_canope_profile(db, user)
+    a  = _get_assessment(db, assessment_id, cp)
+    if not (a.vak_dominant and a.riasec_code and a.disc_dominant):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Les 3 tests (VAK, RIASEC, DISC) doivent être complétés avant validation.",
+        )
+    a.actor_comment = data.actor_comment
+    a.status        = AssessmentStatus.validated
+    a.validated_at  = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(a)
+    return _to_dict(a)
+
+
+def get_assessment(db: DbSession, assessment_id: str, user: Profile) -> dict:
+    """Retourne un bilan par son ID (acteur propriétaire uniquement)."""
+    cp = _get_canope_profile(db, user)
+    return _to_dict(_get_assessment(db, assessment_id, cp))

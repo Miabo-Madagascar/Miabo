@@ -27,6 +27,17 @@ export default async function TuteurDashboardPage({ params }: Props) {
         </Link>
 
         <Link
+          href={`/${locale}/tuteur/disponibilites`}
+          className="flex flex-col gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-base)] p-5 hover:border-[var(--color-primary-300)] hover:shadow-[var(--shadow-sm)] transition-all"
+        >
+          <span className="text-2xl">📆</span>
+          <h3 className="font-semibold text-[var(--text-primary)]">Mes disponibilités</h3>
+          <p className="text-sm text-[var(--text-secondary)]">
+            Gérez vos créneaux hebdomadaires.
+          </p>
+        </Link>
+
+        <Link
           href={`/${locale}/wallet`}
           className="flex flex-col gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-base)] p-5 hover:border-[var(--color-primary-300)] hover:shadow-[var(--shadow-sm)] transition-all"
         >
@@ -45,6 +56,17 @@ export default async function TuteurDashboardPage({ params }: Props) {
           <h3 className="font-semibold text-[var(--text-primary)]">Messages</h3>
           <p className="text-sm text-[var(--text-secondary)]">
             Échangez avec vos élèves.
+          </p>
+        </Link>
+
+        <Link
+          href={`/${locale}/profil`}
+          className="flex flex-col gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-base)] p-5 hover:border-[var(--color-primary-300)] hover:shadow-[var(--shadow-sm)] transition-all"
+        >
+          <span className="text-2xl">👤</span>
+          <h3 className="font-semibold text-[var(--text-primary)]">Mon profil</h3>
+          <p className="text-sm text-[var(--text-secondary)]">
+            Bio, matières, tarif et localisation.
           </p>
         </Link>
       </div>

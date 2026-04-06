@@ -47,6 +47,17 @@ export default async function EleveDashboardPage({ params }: Props) {
             Échangez avec vos tuteurs.
           </p>
         </Link>
+
+        <Link
+          href={`/${locale}/profil`}
+          className="flex flex-col gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-base)] p-5 hover:border-[var(--color-primary-300)] hover:shadow-[var(--shadow-sm)] transition-all"
+        >
+          <span className="text-2xl">👤</span>
+          <h3 className="font-semibold text-[var(--text-primary)]">Mon profil</h3>
+          <p className="text-sm text-[var(--text-secondary)]">
+            Modifiez vos informations personnelles.
+          </p>
+        </Link>
       </div>
     </div>
   )

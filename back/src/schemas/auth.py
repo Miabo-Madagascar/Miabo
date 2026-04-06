@@ -44,6 +44,16 @@ class UpdateProfileRequest(BaseModel):
     locale:     str | None = None
 
 
+class UpdateTutorProfileRequest(BaseModel):
+    """Mise à jour du sous-profil tuteur — tous les champs sont optionnels."""
+    bio:              str | None       = None
+    subjects:         list[str] | None = None
+    grade_levels:     list[str] | None = None
+    hourly_rate:      int | None       = None
+    teaching_methods: list[str] | None = None
+    location:         str | None       = None
+
+
 class ProfileResponse(BaseModel):
     id:                 str
     email:              str

@@ -161,6 +161,38 @@ def _tutor_profile_to_dict(tp: TutorProfile) -> dict:
     }
 
 
+def update_tutor_profile(
+    db:       Session,
+    profile:  Profile,
+    bio:              str | None       = None,
+    subjects:         list[str] | None = None,
+    grade_levels:     list[str] | None = None,
+    hourly_rate:      int | None       = None,
+    teaching_methods: list[str] | None = None,
+    location:         str | None       = None,
+) -> dict:
+    """
+    Met à jour le sous-profil tuteur.
+    Lève 404 si le TutorProfile n'existe pas encore pour ce profil.
+    """
+    from fastapi import HTTPException, status as http_status
+    tp = db.query(TutorProfile).filter(TutorProfile.profile_id == profile.id).first()
+    if not tp:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail="Profil tuteur introuvable",
+        )
+    if bio              is not None: tp.bio              = bio
+    if subjects         is not None: tp.subjects         = subjects
+    if grade_levels     is not None: tp.grade_levels     = grade_levels
+    if hourly_rate      is not None: tp.hourly_rate      = hourly_rate
+    if teaching_methods is not None: tp.teaching_methods = teaching_methods
+    if location         is not None: tp.location         = location
+    db.commit()
+    db.refresh(tp)
+    return get_full_profile(db, profile)
+
+
 def _tutor_public_dict(tp: TutorProfile, p: Profile) -> dict:
     """Version publique du profil tuteur (sans wallet)."""
     return {

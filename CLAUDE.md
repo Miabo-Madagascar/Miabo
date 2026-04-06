@@ -144,16 +144,16 @@ cd back && pytest
 
 ---
 
-## État d'avancement — PHASE 0 TERMINÉE
+## État d'avancement — PHASES 0 À 5 TERMINÉES
 
 | Phase | Contenu | Statut |
 |---|---|---|
 | **Phase 0** | Fondations (migrations, types TS, tokens, arborescence, conventions) | ✅ **TERMINÉ** |
 | **Phase 1** | Auth & profils (Supabase Auth, middleware, LoginForm, RegisterForm, useAuth) | ✅ **TERMINÉ** |
-| **Phase 2** | Profils & dashboards (TutorCard, matching, disponibilités, dashboards rôles) | 🔲 À FAIRE |
-| **Phase 3** | Sessions & CANOPE (réservations, bilans orientation VAK/RIASEC/DISC, ressources) | 🔲 À FAIRE |
-| **Phase 4** | Paiements (MVola + Orange Money, escrow, wallet tuteur) | 🔲 À FAIRE |
-| **Phase 5** | Messagerie (Supabase Realtime, Zustand stores, notifications push) | 🔲 À FAIRE |
+| **Phase 2** | Profils & dashboards (TutorCard, matching, disponibilités, dashboards rôles) | ✅ **TERMINÉ** |
+| **Phase 3** | Sessions & CANOPE (réservations, bilans orientation VAK/RIASEC/DISC, ressources) | ✅ **TERMINÉ** |
+| **Phase 4** | Paiements (MVola + Orange Money, escrow, wallet tuteur) | ✅ **TERMINÉ** |
+| **Phase 5** | Messagerie (Supabase Realtime, Zustand stores, notifications push) | ✅ **TERMINÉ** |
 | **Phase 6** | QA & lancement (tests E2E Playwright, audit RLS, PDF rapports, optimisation) | 🔲 À FAIRE |
 
 ---
