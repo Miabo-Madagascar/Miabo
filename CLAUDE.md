@@ -154,7 +154,7 @@ cd back && pytest
 | **Phase 3** | Sessions & CANOPE (réservations, bilans orientation VAK/RIASEC/DISC, ressources) | ✅ **TERMINÉ** |
 | **Phase 4** | Paiements (MVola + Orange Money, escrow, wallet tuteur) | ✅ **TERMINÉ** |
 | **Phase 5** | Messagerie (Supabase Realtime, Zustand stores, notifications push) | ✅ **TERMINÉ** |
-| **Phase 6** | QA & lancement (tests E2E Playwright, audit RLS, PDF rapports, optimisation) | 🔲 À FAIRE |
+| **Phase 6** | QA & lancement (tests E2E Playwright, audit RLS, PDF rapports, optimisation) | 🔄 EN COURS |
 
 ---
 
