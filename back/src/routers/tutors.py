@@ -4,8 +4,11 @@ Préfixe : /api/v1/tutors
 """
 
 from fastapi import APIRouter, Query, HTTPException, status
-from src.dependencies import DbDep, CurrentUser
+from src.dependencies import DbDep, CurrentUser, require_role
+from src.models.enums import UserRole
+from src.schemas.sessions import AvailabilityRequest
 from src.services import profiles as profiles_svc
+from src.services import availabilities as avail_svc
 
 router = APIRouter(prefix="/tutors", tags=["Tuteurs"])
 
@@ -64,6 +67,34 @@ async def validate_tutor(
 
 
 @router.get("/{tutor_id}/availabilities")
-async def get_availabilities(tutor_id: str, db: DbDep):
-    """Créneaux disponibles du tuteur. TODO PHASE 2."""
-    raise NotImplementedError
+async def get_tutor_availabilities(tutor_id: str, db: DbDep):
+    """Créneaux publics d'un tuteur (identifié par son TutorProfile.id)."""
+    return avail_svc.list_public_availabilities(db, tutor_id)
+
+
+# ── Endpoints authentifiés tuteur (/me) ────────────────────────────────────
+
+@router.get("/me/availabilities")
+async def list_my_availabilities(current_user: CurrentUser, db: DbDep):
+    """Liste les créneaux du tuteur connecté."""
+    return avail_svc.list_availabilities(db, current_user)
+
+
+@router.post("/me/availabilities", status_code=201)
+async def add_my_availability(
+    body:         AvailabilityRequest,
+    current_user: CurrentUser,
+    db:           DbDep,
+):
+    """Ajoute un créneau (récurrent ou ponctuel) au tuteur connecté."""
+    return avail_svc.add_availability(db, current_user, body)
+
+
+@router.delete("/me/availabilities/{avail_id}", status_code=204)
+async def delete_my_availability(
+    avail_id:     str,
+    current_user: CurrentUser,
+    db:           DbDep,
+):
+    """Supprime un créneau du tuteur connecté."""
+    avail_svc.delete_availability(db, current_user, avail_id)
