@@ -87,9 +87,10 @@ def search_tutors(
     )
 
     if subject:
-        # Recherche dans le tableau ARRAY subjects (PostgreSQL LIKE)
+        # Recherche insensible à la casse dans le tableau ARRAY subjects
+        # On convertit le tableau en texte pour utiliser ILIKE
         query = query.filter(
-            TutorProfile.subjects.any(subject)
+            cast(TutorProfile.subjects, TEXT).ilike(f"%{subject}%")
         )
     if location:
         query = query.filter(

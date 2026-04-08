@@ -85,22 +85,22 @@ export function AvailabilityManager() {
     slots: recurringSlots.filter((s) => s.day_of_week === idx),
   }))
 
-  if (isLoading) return <div className="h-32 animate-pulse rounded-xl bg-[var(--bg-muted)]" />
+  if (isLoading) return <div className="h-32 animate-pulse rounded-xl bg-bg-muted" />
 
   return (
     <div className="flex flex-col gap-6">
       {/* ── Créneaux par jour ────────────────────────────────── */}
       <div className="flex flex-col gap-3">
         {byDay.map(({ label, slots: daySlots }) => daySlots.length > 0 && (
-          <div key={label} className="rounded-xl bg-[var(--bg-base)] p-4 shadow-[var(--shadow-sm)]">
-            <p className="mb-2 font-medium text-[var(--text-primary)]">{label}</p>
+          <div key={label} className="rounded-xl bg-bg-base p-4 shadow-sm">
+            <p className="mb-2 font-medium text-text-primary">{label}</p>
             <div className="flex flex-wrap gap-2">
               {daySlots.map((s) => (
-                <div key={s.id} className="flex items-center gap-2 rounded-lg border border-[var(--border-default)] px-3 py-1.5 text-sm">
-                  <span className="text-[var(--text-secondary)]">{s.start_time} – {s.end_time}</span>
+                <div key={s.id} className="flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-sm">
+                  <span className="text-text-secondary">{s.start_time} – {s.end_time}</span>
                   <button
                     onClick={() => handleDelete(s.id)}
-                    className="text-[var(--color-error)] hover:opacity-70 transition-opacity leading-none"
+                    className="text-red-600 hover:opacity-70 transition-opacity leading-none"
                     aria-label={`Supprimer ${label} ${s.start_time}`}
                   >
                     ✕
@@ -111,22 +111,22 @@ export function AvailabilityManager() {
           </div>
         ))}
         {recurringSlots.length === 0 && (
-          <div className="rounded-xl border border-dashed border-[var(--border-default)] p-8 text-center text-sm text-[var(--text-secondary)]">
+          <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-text-secondary">
             Aucun créneau défini. Commencez par en ajouter un ci-dessous.
           </div>
         )}
       </div>
 
       {/* ── Formulaire d'ajout ───────────────────────────────── */}
-      <div className="rounded-xl bg-[var(--bg-base)] p-5 shadow-[var(--shadow-sm)]">
-        <h3 className="mb-4 font-semibold text-[var(--text-primary)]">Ajouter un créneau récurrent</h3>
+      <div className="rounded-xl bg-bg-base p-5 shadow-sm">
+        <h3 className="mb-4 font-semibold text-text-primary">Ajouter un créneau récurrent</h3>
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-[var(--text-primary)]">Jour</label>
+            <label className="text-sm font-medium text-text-primary">Jour</label>
             <select
               value={form.day_of_week}
               onChange={(e) => setForm((p) => ({ ...p, day_of_week: e.target.value }))}
-              className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-base)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+              className="rounded-lg border border-border bg-bg-base px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               {DAYS.map((d, i) => <option key={i} value={i}>{d}</option>)}
             </select>
@@ -137,7 +137,7 @@ export function AvailabilityManager() {
             onChange={(e) => setForm((p) => ({ ...p, end_time: e.target.value }))} />
         </div>
         {error && (
-          <p className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-[var(--color-error)]">{error}</p>
+          <p className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
         )}
         <div className="mt-4">
           <Button onClick={handleAdd} isLoading={adding}>Ajouter ce créneau</Button>

@@ -22,6 +22,8 @@ export function SessionListClient({ locale }: SessionListClientProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [error,     setError]     = useState<string | null>(null)
 
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null)
+
   useEffect(() => {
     async function load() {
       setIsLoading(true)
@@ -38,6 +40,21 @@ export function SessionListClient({ locale }: SessionListClientProps) {
     }
     load()
   }, [])
+
+  const handleConfirm = async (session: { id: string }, accepted: boolean) => {
+    setActionLoadingId(session.id)
+    setError(null)
+    try {
+      await api.put(`/sessions/${session.id}/confirm`, { accepted })
+      // Recharger les sessions après la modification
+      const data = await api.get<SessionDetail[]>("/sessions")
+      setSessions(data)
+    } catch (err) {
+      setError(err instanceof ApiError ? err.detail : "Erreur inattendue")
+    } finally {
+      setActionLoadingId(null)
+    }
+  }
 
   const viewAs: ViewRole = (profile?.role as ViewRole | undefined) ?? "student"
 
@@ -62,7 +79,14 @@ export function SessionListClient({ locale }: SessionListClientProps) {
   return (
     <div className="flex flex-col gap-3">
       {sessions.map((s) => (
-        <SessionCard key={s.id} session={s} locale={locale} viewAs={viewAs} />
+        <SessionCard 
+          key={s.id} 
+          session={s} 
+          locale={locale} 
+          viewAs={viewAs} 
+          onConfirm={handleConfirm}
+          isActionLoading={actionLoadingId === s.id}
+        />
       ))}
     </div>
   )

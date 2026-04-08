@@ -6,6 +6,8 @@ import type { NextConfig } from "next"
  * Le proxy /api/backend/* est géré par le Route Handler
  * app/api/backend/[...path]/route.ts (plus de rewrites nécessaires).
  */
-const nextConfig: NextConfig = {}
+const nextConfig: NextConfig = {
+  trailingSlash: true,
+}
 
 export default nextConfig

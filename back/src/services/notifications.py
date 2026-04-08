@@ -48,3 +48,30 @@ def mark_notifications_read(
     )
     db.commit()
     return updated
+
+
+def mark_all_notifications_read(db: Session, user_id: str) -> int:
+    """Marque toutes les notifications de l'utilisateur comme lues."""
+    updated = (
+        db.query(Notification)
+        .filter(
+            Notification.user_id == user_id,
+            Notification.is_read == False,
+        )
+        .update({"is_read": True}, synchronize_session="fetch")
+    )
+    db.commit()
+    return updated
+
+
+def list_notifications(
+    db: Session,
+    user_id: str,
+    unread_only: bool = False,
+    limit: int = 50
+) -> list[Notification]:
+    """Récupère les notifications d'un utilisateur."""
+    q = db.query(Notification).filter(Notification.user_id == user_id)
+    if unread_only:
+        q = q.filter(Notification.is_read == False)
+    return q.order_by(Notification.created_at.desc()).limit(limit).all()

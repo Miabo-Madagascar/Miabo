@@ -81,7 +81,7 @@ def run_migrations_online() -> None:
             target_metadata=target_metadata,
             compare_type=True,
             compare_server_default=True,
-            include_schemas=True,
+            include_schemas=False,
         )
 
         with context.begin_transaction():

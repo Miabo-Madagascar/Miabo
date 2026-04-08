@@ -4,6 +4,7 @@ Logique : un créneau a soit day_of_week (récurrent) soit specific_date (ponctu
 """
 
 import uuid
+from sqlalchemy import asc, nulls_last
 from sqlalchemy.orm import Session as DbSession
 from fastapi import HTTPException, status
 
@@ -57,7 +58,7 @@ def list_public_availabilities(db: DbSession, tutor_profile_id: str) -> list[dic
     rows = (
         db.query(Availability)
         .filter(Availability.tutor_id == tutor_profile_id)
-        .order_by(Availability.day_of_week.asc().nulls_last(), Availability.start_time)
+        .order_by(nulls_last(asc(Availability.day_of_week)), Availability.start_time)
         .all()
     )
     return [_to_dict(a) for a in rows]

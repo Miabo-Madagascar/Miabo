@@ -99,9 +99,9 @@ export function ProfileEditForm() {
       <div className="rounded-xl bg-[var(--bg-base)] p-5 shadow-[var(--shadow-sm)] flex flex-col gap-4">
         <h3 className="font-semibold text-[var(--text-primary)]">Informations générales</h3>
         <div className="grid gap-3 sm:grid-cols-2">
-          <Input label="Nom complet" value={common.full_name}
+          <Input label="Nom complet" value={common.full_name} required
             onChange={(e) => setCommon((p) => ({ ...p, full_name: e.target.value }))} />
-          <Input label="Téléphone (+261…)" value={common.phone}
+          <Input label="Téléphone (+261…)" value={common.phone} required
             onChange={(e) => setCommon((p) => ({ ...p, phone: e.target.value }))}
             placeholder="+261340000000" />
         </div>

@@ -94,7 +94,7 @@ export function SessionDetailClient({ sessionId, locale: _locale }: SessionDetai
       </div>
 
       {/* ── Infos ──────────────────────────────────────────────── */}
-      <div className="grid gap-4 rounded-xl bg-[var(--bg-base)] p-5 shadow-[var(--shadow-sm)] sm:grid-cols-2">
+      <div className="grid gap-4 rounded-xl bg-bg-base p-5 shadow-sm sm:grid-cols-2">
         <Detail label="Élève"   value={session.student?.full_name ?? "—"} />
         <Detail label="Tuteur"  value={session.tutor?.full_name   ?? "—"} />
         <Detail label="Durée"   value={`${session.duration_minutes / 60}h`} />
@@ -107,7 +107,7 @@ export function SessionDetailClient({ sessionId, locale: _locale }: SessionDetai
 
       {/* ── Erreur action ──────────────────────────────────────── */}
       {error && (
-        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-[var(--color-error)]">{error}</p>
+        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
       )}
 
       {/* ── Actions tuteur ─────────────────────────────────────── */}

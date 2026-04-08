@@ -11,7 +11,6 @@ VALID_DURATIONS = {60, 90, 120, 180}
 
 class CreateSessionRequest(BaseModel):
     tutor_id:         str
-    student_id:       str
     subject:          str
     scheduled_at:     datetime
     duration_minutes: int

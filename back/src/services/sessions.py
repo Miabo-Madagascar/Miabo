@@ -10,7 +10,8 @@ from fastapi import HTTPException, status
 
 from src.models.sessions import Session as SessionModel
 from src.models.users import Profile
-from src.models.enums import SessionStatus, UserRole
+from src.models.enums import SessionStatus, UserRole, NotificationType
+from src.services import notifications as notifications_svc
 
 # ── Transitions autorisées par la machine à états ─────────────────────────
 
@@ -104,6 +105,27 @@ def create_session(
     db.add(session)
     db.commit()
     db.refresh(session)
+
+    # ── Notification de demande ──────────────────────────────────────────────
+    # Si pending_parent : notifier le parent (pour validation financière)
+    # Si pending_tutor  : notifier le tuteur (pour acceptation pédagogique)
+    notif_target_id = str(tutor_id)
+    notif_body      = f"Nouvelle demande de session en {subject} par {requester.full_name}."
+
+    if initial_status == SessionStatus.pending_parent:
+        # TODO: Notifier le parent spécifique lié à l'élève.
+        # Pour l'instant on garde la notification tutor en anticipation.
+        pass
+
+    notifications_svc.create_notification(
+        db,
+        user_id=notif_target_id,
+        notification_type=NotificationType.session_request,
+        title="Nouvelle demande de session",
+        body=notif_body,
+        related_id=str(session.id)
+    )
+
     return session
 
 
@@ -162,7 +184,9 @@ def confirm_session(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Seul le tuteur concerné peut confirmer cette session",
         )
-    _assert_transition(session.status, SessionStatus.pending_tutor)
+    # Vérifie que la session est bien en attente du tuteur
+    target = SessionStatus.confirmed if accepted else SessionStatus.cancelled
+    _assert_transition(session.status, target)
 
     if accepted:
         session.status = SessionStatus.confirmed

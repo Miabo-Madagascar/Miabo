@@ -73,6 +73,7 @@ class Notification(Base):
     title      = Column(Text, nullable=False)
     body       = Column(Text)
     link       = Column(Text)
+    related_id = Column(UUID(as_uuid=True))
     is_read    = Column(Boolean, nullable=False, server_default="false")
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
 

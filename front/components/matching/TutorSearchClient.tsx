@@ -18,6 +18,8 @@ export function TutorSearchClient({ locale }: TutorSearchClientProps) {
   const [tutors,    setTutors]    = useState<TutorCardType[]>([])
   const [subject,   setSubject]   = useState("")
   const [location,  setLocation]  = useState("")
+  const [minRate,   setMinRate]   = useState("")
+  const [maxRate,   setMaxRate]   = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error,     setError]     = useState<string | null>(null)
 
@@ -28,6 +30,8 @@ export function TutorSearchClient({ locale }: TutorSearchClientProps) {
       const params = new URLSearchParams()
       if (subject)  params.set("subject",  subject)
       if (location) params.set("location", location)
+      if (minRate)  params.set("min_rate", minRate)
+      if (maxRate)  params.set("max_rate", maxRate)
       const query = params.toString() ? `?${params}` : ""
       const data  = await api.getPublic<TutorCardType[]>(`/tutors/search${query}`)
       setTutors(data)
@@ -36,7 +40,7 @@ export function TutorSearchClient({ locale }: TutorSearchClientProps) {
     } finally {
       setIsLoading(false)
     }
-  }, [subject, location])
+  }, [subject, location, minRate, maxRate])
 
   // Debounce 400ms sur les filtres
   useEffect(() => {
@@ -54,19 +58,41 @@ export function TutorSearchClient({ locale }: TutorSearchClientProps) {
       </div>
 
       {/* ── Filtres ───────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-3 rounded-xl bg-[var(--bg-base)] p-4 shadow-[var(--shadow-sm)] sm:flex-row">
-        <Input
-          label="Matière"
-          placeholder="Maths, Français, Physique…"
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-        />
-        <Input
-          label="Localisation"
-          placeholder="Antananarivo, Tamatave…"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-        />
+      <div className="flex flex-col gap-3 rounded-xl bg-bg-base p-4 shadow-sm sm:flex-row items-end">
+        <div className="flex-1">
+          <Input
+            label="Matière"
+            placeholder="Maths, Français, Physique…"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+          />
+        </div>
+        <div className="flex-1">
+          <Input
+            label="Localisation"
+            placeholder="Antananarivo, Tamatave…"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+          />
+        </div>
+        <div className="w-full sm:w-32">
+          <Input
+            label="Tarif Min"
+            type="number"
+            placeholder="Min"
+            value={minRate}
+            onChange={(e) => setMinRate(e.target.value)}
+          />
+        </div>
+        <div className="w-full sm:w-32">
+          <Input
+            label="Tarif Max"
+            type="number"
+            placeholder="Max"
+            value={maxRate}
+            onChange={(e) => setMaxRate(e.target.value)}
+          />
+        </div>
       </div>
 
       {/* ── Résultats ─────────────────────────────────────────────── */}

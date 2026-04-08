@@ -45,16 +45,17 @@ export function TutorProfileSection({ values, onChange }: TutorProfileSectionPro
 
       {/* ── Bio ────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-[var(--text-primary)]">
-          Présentation
+        <label className="text-sm font-medium text-text-primary">
+          Présentation <span className="text-red-600">*</span>
         </label>
         <textarea
           value={values.bio}
           onChange={(e) => onChange({ bio: e.target.value })}
           maxLength={1000}
+          required
           rows={3}
           placeholder="Décrivez votre expérience et votre méthode pédagogique…"
-          className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-base)] px-3 py-2 text-sm text-[var(--text-primary)] resize-none focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+          className="rounded-lg border border-border bg-bg-base px-3 py-2 text-sm text-text-primary resize-none focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
       </div>
 
@@ -63,12 +64,14 @@ export function TutorProfileSection({ values, onChange }: TutorProfileSectionPro
         <Input
           label="Matières enseignées (séparées par virgule)"
           value={values.subjects}
+          required
           onChange={(e) => onChange({ subjects: e.target.value })}
           placeholder="Maths, Physique, SVT"
         />
         <Input
           label="Tarif horaire (Ar)"
           type="number"
+          required
           min={2000}
           value={values.hourly_rate}
           onChange={(e) => onChange({ hourly_rate: e.target.value })}
@@ -103,8 +106,8 @@ export function TutorProfileSection({ values, onChange }: TutorProfileSectionPro
               className={[
                 "rounded-lg border px-3 py-1 text-sm font-medium transition-colors",
                 values.grade_levels.includes(value)
-                  ? "border-[var(--color-primary-500)] bg-[var(--color-primary-50)] text-[var(--color-primary-700)]"
-                  : "border-[var(--border-default)] text-[var(--text-secondary)] hover:bg-[var(--bg-muted)]",
+                  ? "border-primary-500 bg-primary-50 text-primary-700"
+                  : "border-border text-text-secondary hover:bg-bg-muted",
               ].join(" ")}
             >
               {label}

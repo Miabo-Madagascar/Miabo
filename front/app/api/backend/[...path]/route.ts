@@ -16,17 +16,13 @@ const BACKEND_URL = process.env.API_URL ?? "http://127.0.0.1:8000"
 
 async function handler(
   request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> },
 ): Promise<NextResponse> {
-  const { path } = await params
-
-  // Reconstruit l'URL backend : /api/backend/xxx -> /api/v1/xxx
-  let targetPath = "/" + path.join("/")
+  const { pathname } = request.nextUrl
+  const apiPrefix = "/api/backend"
+  let targetPath = pathname.slice(apiPrefix.length) || "/"
   
-  // Correction spécifique pour FastAPI : si le path se termine par /messages (POST)
-  // il faut impérativement un slash sinon il redirige (307/308) et fetch perd le body.
-  if (targetPath === "/messages" && request.method === "POST") {
-    targetPath = "/messages/"
+  if (targetPath.length > 1 && targetPath.endsWith("/")) {
+    targetPath = targetPath.slice(0, -1)
   }
 
   const search     = request.nextUrl.search

@@ -12,7 +12,7 @@ from src.config.database import engine, Base
 from src.routers import (
     auth, profiles, tutors, sessions,
     payments, wallet, matching, messages,
-    assessments, resources, admin, reports,
+    assessments, resources, admin, reports, notifications,
 )
 
 API_PREFIX = "/api/v1"
