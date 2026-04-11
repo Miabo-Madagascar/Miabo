@@ -38,6 +38,36 @@ async def search_tutors(
     )
 
 
+# ── Endpoints authentifiés tuteur (/me) ────────────────────────────────────
+
+@router.get("/me/availabilities")
+async def list_my_availabilities(current_user: CurrentUser, db: DbDep):
+    """Liste les créneaux du tuteur connecté."""
+    return avail_svc.list_availabilities(db, current_user)
+
+
+@router.post("/me/availabilities", status_code=201)
+async def add_my_availability(
+    body:         AvailabilityRequest,
+    current_user: CurrentUser,
+    db:           DbDep,
+):
+    """Ajoute un créneau (récurrent ou ponctuel) au tuteur connecté."""
+    return avail_svc.add_availability(db, current_user, body)
+
+
+@router.delete("/me/availabilities/{avail_id}", status_code=204)
+async def delete_my_availability(
+    avail_id:     str,
+    current_user: CurrentUser,
+    db:           DbDep,
+):
+    """Supprime un créneau du tuteur connecté."""
+    avail_svc.delete_availability(db, current_user, avail_id)
+
+
+# ── Endpoints publics tuteur ───────────────────────────────────────────────
+
 @router.get("/{tutor_id}")
 async def get_tutor_profile(tutor_id: str, db: DbDep):
     """Profil public tuteur."""
@@ -70,31 +100,3 @@ async def validate_tutor(
 async def get_tutor_availabilities(tutor_id: str, db: DbDep):
     """Créneaux publics d'un tuteur (identifié par son TutorProfile.id)."""
     return avail_svc.list_public_availabilities(db, tutor_id)
-
-
-# ── Endpoints authentifiés tuteur (/me) ────────────────────────────────────
-
-@router.get("/me/availabilities")
-async def list_my_availabilities(current_user: CurrentUser, db: DbDep):
-    """Liste les créneaux du tuteur connecté."""
-    return avail_svc.list_availabilities(db, current_user)
-
-
-@router.post("/me/availabilities", status_code=201)
-async def add_my_availability(
-    body:         AvailabilityRequest,
-    current_user: CurrentUser,
-    db:           DbDep,
-):
-    """Ajoute un créneau (récurrent ou ponctuel) au tuteur connecté."""
-    return avail_svc.add_availability(db, current_user, body)
-
-
-@router.delete("/me/availabilities/{avail_id}", status_code=204)
-async def delete_my_availability(
-    avail_id:     str,
-    current_user: CurrentUser,
-    db:           DbDep,
-):
-    """Supprime un créneau du tuteur connecté."""
-    avail_svc.delete_availability(db, current_user, avail_id)

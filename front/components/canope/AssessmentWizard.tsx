@@ -23,6 +23,7 @@ export function AssessmentWizard({ locale, basePath }: AssessmentWizardProps) {
 
   const [option,    setOption]    = useState<Option>("A")
   const [studentId, setStudentId] = useState("")
+  const [externalName, setExternalName] = useState("")
   const [serie,     setSerie]     = useState<"L" | "S" | "">("")
   const [interest,  setInterest]  = useState("")
   const [loading,   setLoading]   = useState(false)
@@ -33,6 +34,11 @@ export function AssessmentWizard({ locale, basePath }: AssessmentWizardProps) {
       setError("Veuillez renseigner l'identifiant de l'élève.")
       return
     }
+    if (option === "B" && !externalName.trim()) {
+      setError("Veuillez renseigner le nom du jeune externe.")
+      return
+    }
+
     setLoading(true)
     setError(null)
     try {
@@ -40,8 +46,12 @@ export function AssessmentWizard({ locale, basePath }: AssessmentWizardProps) {
         serie:          serie || null,
         career_interest: interest || null,
       }
-      if (option === "A") body.student_profile_id = studentId.trim()
-      else                body.external_young_id  = "pending"   // sera créé côté COSP
+      if (option === "A") {
+        body.student_profile_id = studentId.trim()
+      } else {
+        body.external_young_id = "pending"
+        body.external_young_full_name = externalName.trim()
+      }
 
       const assessment = await api.post<{ id: string }>("/assessments/", body)
       router.push(`/${locale}/${basePath}/bilans/${assessment.id}`)
@@ -76,12 +86,19 @@ export function AssessmentWizard({ locale, basePath }: AssessmentWizardProps) {
       </div>
 
       {/* ── Identifiant élève (Option A) ─────────────────────────── */}
-      {option === "A" && (
+      {option === "A" ? (
         <Input
           label="Identifiant de l'élève (UUID MIABO)"
           value={studentId}
           onChange={(e) => setStudentId(e.target.value)}
           placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+        />
+      ) : (
+        <Input
+          label="Nom complet du jeune externe"
+          value={externalName}
+          onChange={(e) => setExternalName(e.target.value)}
+          placeholder="Ex: Jean Rakoto"
         />
       )}
 

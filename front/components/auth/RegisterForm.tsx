@@ -35,10 +35,14 @@ export function RegisterForm({ locale }: RegisterFormProps) {
     // Crée le compte Supabase Auth.
     // Le trigger PostgreSQL handle_new_user() crée automatiquement
     // la ligne profiles + le sous-profil métier dès l'insertion dans auth.users.
+    const callbackUrl = `${window.location.origin}/api/auth/callback`
     const { data, error: authError } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName, role } },
+      options: {
+        data:            { full_name: fullName, role },
+        emailRedirectTo: callbackUrl,
+      },
     })
 
     if (authError || !data.user) {
@@ -56,7 +60,14 @@ export function RegisterForm({ locale }: RegisterFormProps) {
     }
 
     if (!data.session) {
-      // Email de confirmation requis — le profil est déjà créé en BDD
+      // Email de confirmation requis.
+      // Stocker les données d'inscription dans un cookie pour la route /api/auth/callback
+      // qui créera le profil FastAPI après confirmation de l'email.
+      const pending = encodeURIComponent(
+        JSON.stringify({ full_name: fullName, role, locale })
+      )
+      document.cookie = `miabo_pending_register=${pending}; path=/; max-age=3600; SameSite=Lax`
+
       setError(
         "Compte créé ! Vérifiez votre boîte mail et confirmez votre adresse pour vous connecter."
       )

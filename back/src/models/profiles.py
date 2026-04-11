@@ -50,9 +50,9 @@ class StudentProfile(Base):
             name="chk_grade_level"
         ),
         CheckConstraint("serie IN ('L', 'S')",          name="chk_serie_student"),
-        CheckConstraint("vak_visual BETWEEN 0 AND 10",  name="chk_vak_visual"),
-        CheckConstraint("vak_auditory BETWEEN 0 AND 9", name="chk_vak_auditory"),
-        CheckConstraint("vak_kinesthetic BETWEEN 0 AND 11", name="chk_vak_kinesthetic"),
+        CheckConstraint("vak_visual BETWEEN 0 AND 20",  name="chk_vak_visual"),
+        CheckConstraint("vak_auditory BETWEEN 0 AND 20", name="chk_vak_auditory"),
+        CheckConstraint("vak_kinesthetic BETWEEN 0 AND 20", name="chk_vak_kinesthetic"),
         CheckConstraint("vak_dominant IN ('V', 'A', 'K')", name="chk_vak_dominant"),
         CheckConstraint("char_length(riasec_code) = 2",     name="chk_riasec_code"),
         CheckConstraint("disc_profile IN ('D','I','S','C')", name="chk_disc_profile"),

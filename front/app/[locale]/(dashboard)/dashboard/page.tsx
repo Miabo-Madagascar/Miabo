@@ -26,8 +26,15 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect(`/${locale}/auth/login`)
 
-  // Récupérer le rôle depuis les user_metadata (renseigné à l'inscription)
-  const role     = user.user_metadata?.role as string | undefined
+  // Récupère le rôle direct depuis la base de données (source de vérité)
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single()
+
+  // Fallback sur user_metadata si la table est inaccessible
+  const role     = profile?.role || user.user_metadata?.role as string | undefined
   const rolePath = role ? (ROLE_TO_PATH[role] ?? "eleve") : "eleve"
 
   redirect(`/${locale}/${rolePath}`)

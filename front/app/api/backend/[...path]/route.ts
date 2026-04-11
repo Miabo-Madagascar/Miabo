@@ -19,14 +19,12 @@ async function handler(
 ): Promise<NextResponse> {
   const { pathname } = request.nextUrl
   const apiPrefix = "/api/backend"
-  let targetPath = pathname.slice(apiPrefix.length) || "/"
   
-  if (targetPath.length > 1 && targetPath.endsWith("/")) {
-    targetPath = targetPath.slice(0, -1)
-  }
+  // Normalise le chemin pour éviter les doubles slashes et les redirections de FastAPI
+  const pathPart = pathname.slice(apiPrefix.length).replace(/\/+$/, "")
+  const targetUrl = `${BACKEND_URL}/api/v1${pathPart || "/"}${request.nextUrl.search}`
 
-  const search     = request.nextUrl.search
-  const targetUrl  = `${BACKEND_URL}/api/v1${targetPath}${search}`
+  console.log(`[Proxy] ${request.method} ${pathname} -> ${targetUrl}`)
 
   // Recopie les headers essentiels en évitant les conflits
   const headers = new Headers()
@@ -43,20 +41,39 @@ async function handler(
     ? undefined
     : await request.arrayBuffer()
 
+  console.log(`[Proxy Request] ${request.method} ${pathname} -> ${targetUrl}`)
+  console.log(`[Proxy Auth] Token: ${headers.get("Authorization") ? "Present" : "Missing"}`)
+
   try {
-    const backendResponse = await fetch(targetUrl, {
+    let backendResponse = await fetch(targetUrl, {
       method:   request.method,
       headers,
       body:     requestBody,
-      redirect: "follow",
+      redirect: "manual",
     })
 
-    // Construit la réponse Next en recopiant status + headers backend
-    const responseHeaders = new Headers(backendResponse.headers)
-    // Supprime le transfer-encoding pour éviter les erreurs de décodage
-    responseHeaders.delete("transfer-encoding")
+    console.log(`[Proxy Response] ${backendResponse.status} from ${targetUrl}`)
 
-    return new NextResponse(backendResponse.body, {
+    if ([307, 308].includes(backendResponse.status)) {
+      const location = backendResponse.headers.get("location")
+      if (location) {
+        const newTargetUrl = new URL(location, targetUrl).toString()
+        backendResponse = await fetch(newTargetUrl, {
+          method:   request.method,
+          headers,
+          body:     requestBody,
+          redirect: "manual",
+        })
+      }
+    }
+
+    const responseHeaders = new Headers(backendResponse.headers)
+    responseHeaders.delete("transfer-encoding")
+    responseHeaders.delete("content-encoding")
+
+    const bodyBuffer = await backendResponse.arrayBuffer()
+
+    return new NextResponse(bodyBuffer, {
       status:  backendResponse.status,
       headers: responseHeaders,
     })

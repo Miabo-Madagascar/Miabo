@@ -9,6 +9,7 @@ Validation JWT :
 """
 
 import os
+import uuid
 from typing import Generator, Annotated
 
 import httpx
@@ -117,10 +118,41 @@ def get_current_user(
 
     profile = db.query(Profile).filter(Profile.id == user_id).first()
     if not profile:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Profil introuvable — inscription incomplète",
-        )
+        # ── Fallback : créer le profil depuis les métadonnées du JWT ──────────
+        # Cela se produit si le trigger PostgreSQL Supabase n'est pas configuré
+        # ou si la route /api/auth/callback n'a pas pu joindre le backend.
+        meta = payload.get("user_metadata") or {}
+        raw_full_name = meta.get("full_name") or payload.get("email", "Utilisateur")
+        raw_role      = meta.get("role", "student")
+
+        # Valider le rôle
+        try:
+            role = UserRole(raw_role)
+        except ValueError:
+            role = UserRole.student
+
+        # Seuls les rôles d'auto-inscription sont autorisés
+        if role not in (UserRole.student, UserRole.tutor, UserRole.parent, UserRole.canope, UserRole.cosp):
+            role = UserRole.student
+
+        # Créer le profil de base COMPLET (avec sous-profil métier)
+        email = payload.get("email") or ""
+        try:
+            from src.services.auth import create_profile as auth_create_profile
+            profile = auth_create_profile(
+                db=db,
+                user_id=user_id,
+                email=email,
+                full_name=raw_full_name,
+                role=role,
+                locale="fr",
+            )
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Profil introuvable — inscription incomplète ({str(e)})",
+            )
 
     if not profile.is_active:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Compte suspendu")

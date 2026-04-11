@@ -9,6 +9,7 @@ from fastapi import HTTPException, status
 
 from src.models.users import Profile
 from src.models.profiles import StudentProfile, TutorProfile
+from src.models.canope_users import CanopProfile
 from src.models.enums import UserRole
 
 
@@ -70,6 +71,30 @@ def create_profile(
             subjects=[],
             grade_levels=[],
             teaching_methods=[],
+        ))
+    elif role in (UserRole.canope, UserRole.cosp):
+        # Création du profil partenaire avec données par défaut (à compléter)
+        parts = full_name.split(" ", 1)
+        first_name = parts[0]
+        last_name = parts[1] if len(parts) > 1 else "-"
+        
+        prefix = "CANOPE" if role == UserRole.canope else "COSP"
+        sesame = f"{prefix}-{str(uuid.uuid4())[:8].upper()}"
+
+        from datetime import date
+        db.add(CanopProfile(
+            id=uuid.uuid4(),
+            profile_id=profile.id,
+            sesame_code=sesame,
+            first_name=first_name,
+            last_name=last_name,
+            date_of_birth=date(1990, 1, 1), # Valeur par défaut
+            gender="autre",
+            city="Antananarivo",
+            region="Analamanga",
+            phone=phone or "-",
+            profession="Agent",
+            is_cosp=(role == UserRole.cosp)
         ))
 
     db.commit()

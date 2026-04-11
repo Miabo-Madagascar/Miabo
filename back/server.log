@@ -1,0 +1,17 @@
+INFO:     Will watch for changes in these directories: ['/home/rahanetra-fanasina-jason/Miabo/back']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [14024] using WatchFiles
+INFO:     Started server process [14028]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     ::ffff:127.0.0.1:0 - "GET /api/v1/health HTTP/1.1" 404 Not Found
+INFO:     ::1:0 - "GET /api/v1/profiles/me/ HTTP/1.1" 307 Temporary Redirect
+INFO:     ::1:0 - "GET /api/v1/profiles/me HTTP/1.1" 401 Unauthorized
+WARNING:  WatchFiles detected changes in 'main.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [14028]
+INFO:     Started server process [14914]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.

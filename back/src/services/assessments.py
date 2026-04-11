@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session as DbSession
 from fastapi import HTTPException, status
 
 from src.models.canope import Assessment
-from src.models.canope_users import CanopProfile
+from src.models.canope_users import CanopProfile, ExternalYoungProfile
 from src.models.users import Profile
 from src.models.enums import AssessmentStatus
 from src.schemas.assessments import (
@@ -92,17 +92,42 @@ def list_assessments(db: DbSession, user: Profile) -> list[dict]:
 
 def create_assessment(db: DbSession, user: Profile, data: CreateAssessmentRequest) -> dict:
     """Crée un bilan en brouillon (Option A : élève MIABO / Option B : jeune externe)."""
-    if (data.student_profile_id is None) == (data.external_young_id is None):
+    # Validation de l'exclusivité Option A vs B
+    option_a = data.student_profile_id is not None
+    option_b = (data.external_young_id is not None) or (data.external_young_full_name is not None)
+    
+    if option_a == option_b: # XOR
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="Renseignez student_profile_id OU external_young_id, pas les deux.",
+            detail="Renseignez student_profile_id (Option A) OU infos jeune externe (Option B).",
         )
+        
     cp = _get_canope_profile(db, user)
+    
+    external_id = None
+    if option_b:
+        if data.external_young_id and data.external_young_id != "pending":
+            external_id = uuid.UUID(data.external_young_id)
+        else:
+            # Création automatique du profil jeune externe
+            from datetime import date
+            ey = ExternalYoungProfile(
+                id=uuid.uuid4(),
+                created_by=cp.id,
+                full_name=data.external_young_full_name or "Jeune Externe",
+                date_of_birth=date(2010, 1, 1),
+                gender="autre",
+                region="Analamanga"
+            )
+            db.add(ey)
+            db.flush()
+            external_id = ey.id
+
     a  = Assessment(
         id                 = uuid.uuid4(),
         administered_by    = cp.id,
         student_profile_id = data.student_profile_id,
-        external_young_id  = data.external_young_id,
+        external_young_id  = external_id,
         serie              = data.serie,
         career_interest    = data.career_interest,
         status             = AssessmentStatus.draft,

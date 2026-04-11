@@ -8,12 +8,13 @@ from pydantic import BaseModel, field_validator
 class CreateAssessmentRequest(BaseModel):
     """
     Option A : student_profile_id renseigné (élève MIABO).
-    Option B : external_young_id renseigné (jeune externe COSP).
+    Option B : external_young_id renseigné (existant) OU external_young_full_name (nouveau).
     """
-    student_profile_id: str | None = None
-    external_young_id:  str | None = None
-    serie:              str | None = None   # "L" | "S"
-    career_interest:    str | None = None
+    student_profile_id:        str | None = None
+    external_young_id:         str | None = None
+    external_young_full_name:  str | None = None
+    serie:                     str | None = None   # "L" | "S"
+    career_interest:           str | None = None
 
     @field_validator("serie")
     @classmethod
@@ -32,19 +33,19 @@ class VakRequest(BaseModel):
     @field_validator("v_score")
     @classmethod
     def check_v(cls, v: int) -> int:
-        if not 0 <= v <= 10: raise ValueError("V doit être entre 0 et 10")
+        if not 0 <= v <= 20: raise ValueError("V doit être entre 0 et 20")
         return v
 
     @field_validator("a_score")
     @classmethod
     def check_a(cls, v: int) -> int:
-        if not 0 <= v <= 9: raise ValueError("A doit être entre 0 et 9")
+        if not 0 <= v <= 20: raise ValueError("A doit être entre 0 et 20")
         return v
 
     @field_validator("k_score")
     @classmethod
     def check_k(cls, v: int) -> int:
-        if not 0 <= v <= 11: raise ValueError("K doit être entre 0 et 11")
+        if not 0 <= v <= 20: raise ValueError("K doit être entre 0 et 20")
         return v
 
 

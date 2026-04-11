@@ -7,7 +7,7 @@ import type { NextConfig } from "next"
  * app/api/backend/[...path]/route.ts (plus de rewrites nécessaires).
  */
 const nextConfig: NextConfig = {
-  trailingSlash: true,
+  trailingSlash: false,
 }
 
 export default nextConfig

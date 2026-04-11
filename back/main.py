@@ -55,11 +55,13 @@ app.include_router(assessments.router, prefix=API_PREFIX)
 app.include_router(resources.router,   prefix=API_PREFIX)
 app.include_router(admin.router,       prefix=API_PREFIX)
 app.include_router(reports.router,     prefix=API_PREFIX)
+app.include_router(notifications.router, prefix=API_PREFIX)
 
 
 @app.get("/health", tags=["Santé"])
+@app.get(f"{API_PREFIX}/health", tags=["Santé"])
 async def health_check():
-    """Endpoint de santé — utilisé par le load balancer."""
+    """Endpoint de santé — utilisé par le load balancer et le proxy."""
     return {"status": "ok", "version": "2.0.0"}
 
 
