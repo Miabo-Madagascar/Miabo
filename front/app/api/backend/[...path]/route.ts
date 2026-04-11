@@ -71,6 +71,20 @@ async function handler(
     responseHeaders.delete("transfer-encoding")
     responseHeaders.delete("content-encoding")
 
+    // Si on détecte un flux (SSE ou autre), on retourne directement le ReadableStream
+    // sans attendre sa résolution (ce qui bloquerait la requête à l'infini).
+    const contentType = responseHeaders.get("content-type")
+    
+    if (contentType && contentType.includes("text/event-stream")) {
+      responseHeaders.set("Cache-Control", "no-cache, no-transform")
+      responseHeaders.set("Connection", "keep-alive")
+      return new NextResponse(backendResponse.body, {
+        status: backendResponse.status,
+        headers: responseHeaders,
+      })
+    }
+
+    // Sinon, comportement standard : on bufferise la réponse.
     const bodyBuffer = await backendResponse.arrayBuffer()
 
     return new NextResponse(bodyBuffer, {
