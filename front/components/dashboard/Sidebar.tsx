@@ -31,16 +31,17 @@ interface SidebarProps {
 }
 
 const MENU_ITEMS: NavItem[] = [
-  { label: "Dashboard",   href: "",           icon: BarChart3,    roles: ["student", "tutor", "parent", "admin", "canope", "cosp"] },
-  { label: "Trouver Tuteur", href: "/tuteurs",   icon: Search,      roles: ["student"] },
-  { label: "Sessions",    href: "/sessions",  icon: Calendar,    roles: ["student", "tutor", "parent"] },
-  { label: "Messages",    href: "/messages",  icon: MessageSquare, roles: ["student", "tutor", "parent", "admin"] },
-  { label: "Portefeuille", href: "/wallet",    icon: Wallet,       roles: ["student", "tutor", "parent"] },
-  { label: "Disponibilités", href: "/tuteur/disponibilites", icon: BookOpen, roles: ["tutor"] },
-  { label: "Bilans",      href: "/canope/bilans", icon: ClipboardList, roles: ["canope", "cosp", "admin"] },
-  { label: "Ressources",  href: "/canope/ressources", icon: BookOpen, roles: ["canope", "cosp", "student"] },
-  { label: "Utilisateurs", href: "/admin/users", icon: Users,      roles: ["admin"] },
-  { label: "Mon Profil",  href: "/profil",    icon: User,        roles: ["student", "tutor", "parent", "admin", "canope", "cosp"] },
+  { label: "Dashboard",        href: "",                     icon: BarChart3,     roles: ["student", "tutor", "parent", "admin", "canope", "cosp"] },
+  { label: "Trouver Tuteur",  href: "/tuteurs",             icon: Search,        roles: ["student"] },
+  { label: "Sessions",         href: "/sessions",            icon: Calendar,      roles: ["student", "tutor", "parent"] },
+  { label: "Messages",         href: "/messages",            icon: MessageSquare, roles: ["student", "tutor", "parent", "admin"] },
+  { label: "Portefeuille",     href: "/wallet",              icon: Wallet,        roles: ["student", "tutor", "parent"] },
+  { label: "Disponibilités", href: "/tuteur/disponibilites", icon: BookOpen,      roles: ["tutor"] },
+  { label: "Bilans",           href: "/canope/bilans",       icon: ClipboardList, roles: ["canope", "cosp", "admin"] },
+  { label: "Validation Tuteurs", href: "/canope/tuteurs",    icon: Users,         roles: ["canope", "admin"] },
+  { label: "Ressources",       href: "/canope/ressources",   icon: BookOpen,      roles: ["canope", "cosp", "student"] },
+  { label: "Utilisateurs",     href: "/admin/users",         icon: Users,         roles: ["admin"] },
+  { label: "Mon Profil",       href: "/profil",              icon: User,          roles: ["student", "tutor", "parent", "admin", "canope", "cosp"] },
 ]
 
 export function Sidebar({ locale, role }: SidebarProps) {

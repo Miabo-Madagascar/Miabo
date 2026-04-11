@@ -88,12 +88,47 @@ async def get_compatibility_score(
     raise NotImplementedError
 
 
+from pydantic import BaseModel
+
+class TutorValidationRequest(BaseModel):
+    status: str  # "validated" or "rejected"
+
 @router.put("/{tutor_id}/validate")
 async def validate_tutor(
-    tutor_id: str, current_user: CurrentUser, db: DbDep
+    tutor_id: str, 
+    body: TutorValidationRequest,
+    current_user: CurrentUser, 
+    db: DbDep
 ):
-    """Valide ou rejette un tuteur (admin/canope). TODO PHASE 2."""
-    raise NotImplementedError
+    """Valide ou rejette un tuteur (admin/canope)."""
+    if current_user.role not in (UserRole.admin, UserRole.canope):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Seuls les administrateurs et CANOPE peuvent valider un tuteur."
+        )
+    
+    from src.models.profiles import TutorProfile
+    from src.models.enums import TutorStatus
+    
+    tp = db.query(TutorProfile).filter(TutorProfile.profile_id == tutor_id).first()
+    if not tp:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Tuteur introuvable"
+        )
+        
+    if body.status == "validated":
+        tp.validation_status = TutorStatus.validated
+    elif body.status == "rejected":
+        tp.validation_status = TutorStatus.rejected
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Statut invalide. Utilisez 'validated' ou 'rejected'."
+        )
+        
+    db.commit()
+    return {"message": f"Statut du tuteur mis à jour : {body.status}"}
 
 
 @router.get("/{tutor_id}/availabilities")

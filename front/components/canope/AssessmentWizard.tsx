@@ -5,7 +5,7 @@
  * Étape 2 : identifiant de l'élève ou infos du jeune externe
  */
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { api, ApiError } from "@/lib/api/client"
 import { Button } from "@/components/ui/Button"
@@ -28,10 +28,29 @@ export function AssessmentWizard({ locale, basePath }: AssessmentWizardProps) {
   const [interest,  setInterest]  = useState("")
   const [loading,   setLoading]   = useState(false)
   const [error,     setError]     = useState<string | null>(null)
+  const [students,  setStudents]  = useState<{ profile_id: string, full_name: string, grade_level: string }[]>([])
+  const [fetching,  setFetching]  = useState(false)
+
+  // Charger la liste des élèves au montage
+  useEffect(() => {
+    async function fetchStudents() {
+      setFetching(true)
+      try {
+        const data = await api.get<{ profile_id: string, student_profile_id: string, full_name: string, grade_level: string }[]>("/profiles/students")
+        // On utilise student_profile_id pour l'assessment
+        setStudents(data.map(s => ({ profile_id: s.student_profile_id, full_name: s.full_name, grade_level: s.grade_level })))
+      } catch (err) {
+        console.error("Erreur chargement élèves:", err)
+      } finally {
+        setFetching(false)
+      }
+    }
+    fetchStudents()
+  }, [])
 
   async function handleSubmit() {
-    if (option === "A" && !studentId.trim()) {
-      setError("Veuillez renseigner l'identifiant de l'élève.")
+    if (option === "A" && !studentId) {
+      setError("Veuillez sélectionner un élève.")
       return
     }
     if (option === "B" && !externalName.trim()) {
@@ -47,7 +66,7 @@ export function AssessmentWizard({ locale, basePath }: AssessmentWizardProps) {
         career_interest: interest || null,
       }
       if (option === "A") {
-        body.student_profile_id = studentId.trim()
+        body.student_profile_id = studentId
       } else {
         body.external_young_id = "pending"
         body.external_young_full_name = externalName.trim()
@@ -66,18 +85,18 @@ export function AssessmentWizard({ locale, basePath }: AssessmentWizardProps) {
     <div className="flex flex-col gap-6">
       {/* ── Choix option ────────────────────────────────────────── */}
       <div>
-        <p className="mb-2 text-sm font-medium text-[var(--text-primary)]">Type de bilan</p>
+        <p className="mb-2 text-sm font-medium text-text-primary">Type de bilan</p>
         <div className="flex gap-3">
           {(["A", "B"] as Option[]).map((o) => (
             <button key={o} type="button" onClick={() => setOption(o)}
               className={["flex-1 rounded-xl border p-4 text-left transition-colors",
                 option === o
-                  ? "border-[var(--color-primary-500)] bg-[var(--color-primary-50)]"
-                  : "border-[var(--border-default)] hover:bg-[var(--bg-subtle)]",
+                  ? "border-primary bg-primary-50"
+                  : "border-border hover:bg-bg-subtle",
               ].join(" ")}
             >
-              <p className="font-semibold text-[var(--text-primary)]">Option {o}</p>
-              <p className="mt-0.5 text-sm text-[var(--text-secondary)]">
+              <p className="font-semibold text-text-primary">Option {o}</p>
+              <p className="mt-0.5 text-sm text-text-secondary">
                 {o === "A" ? "Élève inscrit sur MIABO" : "Jeune externe (sans compte)"}
               </p>
             </button>
@@ -87,12 +106,23 @@ export function AssessmentWizard({ locale, basePath }: AssessmentWizardProps) {
 
       {/* ── Identifiant élève (Option A) ─────────────────────────── */}
       {option === "A" ? (
-        <Input
-          label="Identifiant de l'élève (UUID MIABO)"
-          value={studentId}
-          onChange={(e) => setStudentId(e.target.value)}
-          placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-        />
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-text-primary">Sélectionner l&apos;élève</label>
+          <select
+            value={studentId}
+            onChange={(e) => setStudentId(e.target.value)}
+            disabled={fetching}
+            className="w-full rounded-lg border border-border bg-bg-base px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all disabled:opacity-50"
+          >
+            <option value="">-- Choisir un élève --</option>
+            {students.map((s) => (
+              <option key={s.profile_id} value={s.profile_id}>
+                {s.full_name} ({s.grade_level})
+              </option>
+            ))}
+          </select>
+          {fetching && <p className="text-[10px] text-text-muted animate-pulse">Chargement des élèves...</p>}
+        </div>
       ) : (
         <Input
           label="Nom complet du jeune externe"

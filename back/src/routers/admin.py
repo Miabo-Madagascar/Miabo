@@ -48,12 +48,33 @@ async def suspend_user(user_id: str, current_user: CurrentUser, db: DbDep):
 
 @router.get("/tutors/pending")
 async def list_pending_tutors(current_user: CurrentUser, db: DbDep):
-    """Liste les tuteurs en attente de validation. TODO Phase 6."""
+    """Liste les tuteurs en attente de validation. Utilisable par CANOPE."""
     if current_user.role not in (UserRole.admin, UserRole.canope):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Réservé à l'administration et aux acteurs CANOPE")
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED,
-                        detail="Liste tuteurs en attente non encore implémentée")
+    from src.models.users import Profile
+    from src.models.profiles import TutorProfile
+    
+    rows = (
+        db.query(TutorProfile, Profile)
+        .join(Profile, Profile.id == TutorProfile.profile_id)
+        .filter(TutorProfile.validation_status == "pending")
+        .all()
+    )
+    
+    from src.services.profiles import _tutor_public_dict
+    
+    # We include some extra info like the email, since it's an admin/canope endpoint
+    results = []
+    for tp, p in rows:
+        data = _tutor_public_dict(tp, p)
+        data["email"] = p.email
+        data["phone"] = p.phone
+        data["created_at"] = p.created_at.isoformat() if p.created_at else None
+        data["validation_status"] = tp.validation_status.value
+        results.append(data)
+        
+    return results
 
 
 @router.get("/escrow")

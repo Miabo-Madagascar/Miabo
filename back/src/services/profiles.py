@@ -109,6 +109,25 @@ def search_tutors(
     return [_tutor_public_dict(tp, p) for tp, p in rows]
 
 
+def list_students(db: Session) -> list[dict]:
+    """Liste tous les élèves inscrits avec leurs infos de base."""
+    rows = (
+        db.query(StudentProfile, Profile)
+        .join(Profile, Profile.id == StudentProfile.profile_id)
+        .filter(Profile.is_active.is_(True))
+        .all()
+    )
+    return [
+        {
+            "profile_id": str(p.id),
+            "student_profile_id": str(sp.id),
+            "full_name": p.full_name,
+            "grade_level": sp.grade_level,
+        }
+        for sp, p in rows
+    ]
+
+
 def get_tutor_public_profile(db: Session, tutor_id: str) -> dict | None:
     """Profil public d'un tuteur validé."""
     row = (

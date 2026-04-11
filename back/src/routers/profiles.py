@@ -11,6 +11,12 @@ from src.services import profiles as profiles_svc
 router = APIRouter(prefix="/profiles", tags=["Profils"])
 
 
+@router.get("/students")
+async def list_students(db: DbDep):
+    """Liste tous les élèves (accessible par CANOPE/COSP)."""
+    return profiles_svc.list_students(db)
+
+
 @router.get("/me")
 async def get_my_profile(current_user: CurrentUser, db: DbDep):
     """Retourne le profil complet de l'utilisateur connecté."""
