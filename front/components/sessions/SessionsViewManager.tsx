@@ -97,7 +97,7 @@ export function SessionsViewManager({ locale }: Props) {
           {sessions.length === 0 && <p className="text-center py-10 text-text-muted">Aucune session.</p>}
         </div>
       ) : (
-        <SessionsCalendar sessions={sessions as SessionDetail[]} locale={locale} />
+        <SessionsCalendar sessions={sessions} locale={locale} />
       )}
     </div>
   )
