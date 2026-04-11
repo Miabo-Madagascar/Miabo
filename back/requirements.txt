@@ -3,3 +3,9 @@ uvicorn
 python-dotenv
 sqlalchemy
 psycopg2-binary
+alembic
+python-jose[cryptography]
+pydantic[email]
+httpx
+pytest
+pytest-asyncio

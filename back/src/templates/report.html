@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Rapport de Bilan d'Orientation - MIABO</title>
+    <style>
+        @page {
+            margin: 2cm;
+            @bottom-right {
+                content: "Page " counter(page) " sur " counter(pages);
+                font-size: 9pt;
+            }
+        }
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            color: #333;
+            line-height: 1.5;
+            font-size: 11pt;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #0056b3;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #0056b3;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .header p {
+            margin: 5px 0 0;
+            font-style: italic;
+            color: #666;
+        }
+        .section {
+            margin-bottom: 25px;
+        }
+        .section-title {
+            background-color: #f0f4f8;
+            padding: 8px 12px;
+            border-left: 5px solid #0056b3;
+            font-weight: bold;
+            font-size: 13pt;
+            margin-bottom: 15px;
+            color: #004085;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .info-row {
+            margin-bottom: 8px;
+        }
+        .label {
+            font-weight: bold;
+            color: #555;
+            width: 150px;
+            display: inline-block;
+        }
+        .value {
+            color: #000;
+        }
+        .test-box {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #fff;
+        }
+        .test-title {
+            font-weight: bold;
+            color: #0056b3;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .scores {
+            font-size: 10pt;
+            margin-bottom: 10px;
+        }
+        .dominant {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #28a745;
+            text-align: center;
+        }
+        .interpretation {
+            font-style: italic;
+            font-size: 10pt;
+            color: #666;
+            margin-top: 10px;
+        }
+        .comment {
+            background-color: #fff9db;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ffe066;
+            white-space: pre-wrap;
+        }
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 9pt;
+            color: #999;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Bilan d'Orientation</h1>
+        <p>Généré par la plateforme MIABO - Madagascar</p>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Informations Générales</div>
+        <div class="grid">
+            <div class="info-row"><span class="label">ID Bilan :</span> <span class="value">{{ assessment_id }}</span></div>
+            <div class="info-row"><span class="label">Date de validation :</span> <span class="value">{{ validated_at }}</span></div>
+            <div class="info-row"><span class="label">Série :</span> <span class="value">{{ serie }}</span></div>
+            <div class="info-row"><span class="label">Carrière visée :</span> <span class="value">{{ career_interest }}</span></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Résultats des Tests</div>
+        <div style="display: flex; gap: 20px;">
+            <!-- VAK -->
+            <div class="test-box" style="flex: 1;">
+                <div class="test-title">Profil VAK</div>
+                <div class="scores">
+                    V: {{ vak_v_score }} | A: {{ vak_a_score }} | K: {{ vak_k_score }}
+                </div>
+                <div class="dominant">{{ vak_dominant }}</div>
+                <div class="interpretation">{{ vak_description }}</div>
+            </div>
+            <!-- RIASEC -->
+            <div class="test-box" style="flex: 1;">
+                <div class="test-title">Profil RIASEC</div>
+                <div class="scores">
+                    {% for k, v in riasec_scores.items() %}{{ k }}: {{ v }} {% endfor %}
+                </div>
+                <div class="dominant">{{ riasec_code }}</div>
+                <div class="interpretation">{{ riasec_description }}</div>
+            </div>
+            <!-- DISC -->
+            <div class="test-box" style="flex: 1;">
+                <div class="test-title">Profil DISC</div>
+                <div class="scores">
+                    {% for k, v in disc_scores.items() %}{{ k }}: {{ v }} {% endfor %}
+                </div>
+                <div class="dominant">{{ disc_dominant }}</div>
+                <div class="interpretation">{{ disc_description }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Observations du Conseiller</div>
+        <div class="comment">
+            {{ actor_comment }}
+        </div>
+    </div>
+
+    <div class="footer">
+        © {{ year }} MIABO Plattform - Tous droits réservés.
+        <br>Ce document est strictement confidentiel.
+    </div>
+</body>
+</html>
