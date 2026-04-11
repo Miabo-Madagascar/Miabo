@@ -8,19 +8,10 @@ import { useState } from "react"
 import Calendar from "react-calendar"
 import "react-calendar/dist/Calendar.css"
 import { Badge } from "@/components/ui/Badge"
-
-interface Session {
-  id:               string
-  status:           string
-  subject:          string
-  scheduled_at:     string
-  duration_minutes: number
-  tutor?:           { full_name: string }
-  student?:         { full_name: string }
-}
+import type { SessionDetail } from "@/types"
 
 interface SessionsCalendarProps {
-  sessions: Session[]
+  sessions: SessionDetail[]
   locale:   string
 }
 
