@@ -30,17 +30,24 @@ class CanopProfile(Base):
     last_name           = Column(Text, nullable=False)
     date_of_birth       = Column(Date, nullable=False)
     gender              = Column(Text, nullable=False)
+    address             = Column(Text)                   # Adresse postale complète
     city                = Column(Text, nullable=False)
     region              = Column(Text, nullable=False)
     phone               = Column(Text, nullable=False)
     profession          = Column(Text, nullable=False)
-    education_level     = Column(Text)
+    profile_type        = Column(Text)                   # etudiant|tuteur|parent|autre
+    profile_other       = Column(Text)                   # Précision si profile_type = 'autre'
+    education_level     = Column(Text)                   # Niveau d'étude/diplôme (facultatif)
     cosp_training_dates = Column(ARRAY(Date), nullable=False, server_default="{}")
     is_cosp             = Column(Boolean, nullable=False, server_default="false")
     created_at          = Column(TIMESTAMP(timezone=True), server_default=func.now())
 
     __table_args__ = (
         CheckConstraint("gender IN ('M', 'F', 'autre')", name="chk_canope_gender"),
+        CheckConstraint(
+            "profile_type IS NULL OR profile_type IN ('etudiant', 'tuteur', 'parent', 'autre')",
+            name="chk_canope_profile_type",
+        ),
     )
 
 
@@ -69,6 +76,6 @@ class ExternalYoungProfile(Base):
     __table_args__ = (
         CheckConstraint("gender IN ('M', 'F', 'autre')",
                         name="chk_external_gender"),
-        CheckConstraint("serie IN ('L', 'S')",
+        CheckConstraint("serie IN ('A1', 'A2', 'S', 'OSE', 'C', 'D', 'L')",
                         name="chk_external_serie"),
     )

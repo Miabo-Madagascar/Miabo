@@ -8,19 +8,33 @@ from pydantic import BaseModel, field_validator
 class CreateAssessmentRequest(BaseModel):
     """
     Option A : student_profile_id renseigné (élève MIABO).
-    Option B : external_young_id renseigné (existant) OU external_young_full_name (nouveau).
+    Option B : external_young_id renseigné (existant) OU infos jeune externe (nouveau).
+    Champs jeune externe (CDC §6) : date_of_birth, gender, region, quartier, school_name.
     """
     student_profile_id:        str | None = None
     external_young_id:         str | None = None
     external_young_full_name:  str | None = None
-    serie:                     str | None = None   # "L" | "S"
+    date_of_birth:             str | None = None   # ISO YYYY-MM-DD
+    gender:                    str | None = None   # M | F | autre
+    region:                    str | None = None
+    quartier:                  str | None = None
+    school_name:               str | None = None
+    serie:                     str | None = None
     career_interest:           str | None = None
 
     @field_validator("serie")
     @classmethod
     def serie_valide(cls, v: str | None) -> str | None:
-        if v and v not in ("L", "S"):
-            raise ValueError("Série invalide : L ou S uniquement")
+        series_valides = ("A1", "A2", "S", "OSE", "C", "D", "L")
+        if v and v not in series_valides:
+            raise ValueError(f"Série invalide. Valeurs acceptées : {', '.join(series_valides)}")
+        return v
+
+    @field_validator("gender")
+    @classmethod
+    def gender_valide(cls, v: str | None) -> str | None:
+        if v and v not in ("M", "F", "autre"):
+            raise ValueError("Sexe invalide. Valeurs acceptées : M, F, autre")
         return v
 
 

@@ -9,12 +9,42 @@ import type { Notification }  from "./db.messaging.types"
 
 // ── Évaluations orientation ────────────────────────────────────────────────
 
+/** GET /api/v1/assessments/stats */
+export interface AssessmentStats {
+  total:           number
+  draft:           number
+  in_progress:     number
+  validated:       number
+  this_month:      number
+  completion_rate: number   // pourcentage 0-100
+}
+
+/** PUT /api/v1/profiles/me/canope */
+export interface UpdateCanopProfileRequest {
+  first_name?:          string
+  last_name?:           string
+  date_of_birth?:       string   // YYYY-MM-DD
+  gender?:              "M" | "F" | "autre"
+  address?:             string
+  city?:                string
+  region?:              string
+  profession?:          string
+  profile_type?:        "etudiant" | "tuteur" | "parent" | "autre"
+  profile_other?:       string
+  education_level?:     string
+  cosp_training_dates?: string[] // YYYY-MM-DD[]
+}
+
 /** POST /api/v1/assessments */
 export interface CreateAssessmentRequest {
-  student_profile_id?: string
-  external_young_id?:  string
-  serie?:              "L" | "S"
-  career_interest?:    string
+  external_young_full_name: string
+  date_of_birth?:           string          // YYYY-MM-DD
+  gender?:                  "M" | "F" | "autre"
+  region?:                  string
+  quartier?:                string
+  school_name?:             string
+  serie?:                   "A1" | "A2" | "S" | "OSE" | "C" | "D" | "L"
+  career_interest?:         string
 }
 
 export interface SubmitVakRequest {

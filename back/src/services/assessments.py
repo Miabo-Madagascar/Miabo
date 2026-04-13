@@ -56,26 +56,51 @@ def _get_assessment(db: DbSession, assessment_id: str, cp: CanopProfile) -> Asse
     return a
 
 
-def _to_dict(a: Assessment) -> dict:
+def _to_dict(a: Assessment, db: DbSession | None = None) -> dict:
+    # Résolution des infos du jeune externe via la table external_young_profiles
+    ey_name: str | None = None
+    ey_dob:  str | None = None
+    ey_gender:  str | None = None
+    ey_region:  str | None = None
+    ey_quartier: str | None = None
+    ey_school:  str | None = None
+    if a.external_young_id and db:
+        ey = db.query(ExternalYoungProfile).filter(
+            ExternalYoungProfile.id == a.external_young_id
+        ).first()
+        if ey:
+            ey_name    = ey.full_name
+            ey_dob     = ey.date_of_birth.isoformat() if ey.date_of_birth else None
+            ey_gender  = ey.gender
+            ey_region  = ey.region
+            ey_quartier = ey.quartier
+            ey_school  = ey.school_name
+
     return {
-        "id":                 str(a.id),
-        "administered_by":    str(a.administered_by),
-        "student_profile_id": str(a.student_profile_id) if a.student_profile_id else None,
-        "external_young_id":  str(a.external_young_id)  if a.external_young_id  else None,
-        "serie":              a.serie,
-        "career_interest":    a.career_interest,
-        "vak_v_score":        a.vak_v_score,
-        "vak_a_score":        a.vak_a_score,
-        "vak_k_score":        a.vak_k_score,
-        "vak_dominant":       a.vak_dominant,
-        "riasec_scores":      a.riasec_scores,
-        "riasec_code":        a.riasec_code,
-        "disc_scores":        a.disc_scores,
-        "disc_dominant":      a.disc_dominant,
-        "actor_comment":      a.actor_comment,
-        "status":             a.status.value,
-        "created_at":         a.created_at.isoformat() if a.created_at else None,
-        "validated_at":       a.validated_at.isoformat() if a.validated_at else None,
+        "id":                          str(a.id),
+        "administered_by":             str(a.administered_by),
+        "student_profile_id":          str(a.student_profile_id) if a.student_profile_id else None,
+        "external_young_id":           str(a.external_young_id)  if a.external_young_id  else None,
+        "external_young_full_name":    ey_name,
+        "external_young_date_of_birth": ey_dob,
+        "external_young_gender":       ey_gender,
+        "external_young_region":       ey_region,
+        "external_young_quartier":     ey_quartier,
+        "external_young_school_name":  ey_school,
+        "serie":                    a.serie,
+        "career_interest":          a.career_interest,
+        "vak_v_score":              a.vak_v_score,
+        "vak_a_score":              a.vak_a_score,
+        "vak_k_score":              a.vak_k_score,
+        "vak_dominant":             a.vak_dominant,
+        "riasec_scores":            a.riasec_scores,
+        "riasec_code":              a.riasec_code,
+        "disc_scores":              a.disc_scores,
+        "disc_dominant":            a.disc_dominant,
+        "actor_comment":            a.actor_comment,
+        "status":                   a.status.value,
+        "created_at":               a.created_at.isoformat() if a.created_at else None,
+        "validated_at":             a.validated_at.isoformat() if a.validated_at else None,
     }
 
 
@@ -87,7 +112,7 @@ def list_assessments(db: DbSession, user: Profile) -> list[dict]:
     rows = db.query(Assessment).filter(
         Assessment.administered_by == cp.id
     ).order_by(Assessment.created_at.desc()).all()
-    return [_to_dict(a) for a in rows]
+    return [_to_dict(a, db) for a in rows]
 
 
 def create_assessment(db: DbSession, user: Profile, data: CreateAssessmentRequest) -> dict:
@@ -109,15 +134,18 @@ def create_assessment(db: DbSession, user: Profile, data: CreateAssessmentReques
         if data.external_young_id and data.external_young_id != "pending":
             external_id = uuid.UUID(data.external_young_id)
         else:
-            # Création automatique du profil jeune externe
+            # Création automatique du profil jeune externe avec les champs CDC §6
             from datetime import date
+            dob = date.fromisoformat(data.date_of_birth) if data.date_of_birth else date(2010, 1, 1)
             ey = ExternalYoungProfile(
                 id=uuid.uuid4(),
                 created_by=cp.id,
                 full_name=data.external_young_full_name or "Jeune Externe",
-                date_of_birth=date(2010, 1, 1),
-                gender="autre",
-                region="Analamanga"
+                date_of_birth=dob,
+                gender=data.gender or "autre",
+                region=data.region or "Analamanga",
+                quartier=data.quartier or None,
+                school_name=data.school_name or None,
             )
             db.add(ey)
             db.flush()
@@ -135,7 +163,7 @@ def create_assessment(db: DbSession, user: Profile, data: CreateAssessmentReques
     db.add(a)
     db.commit()
     db.refresh(a)
-    return _to_dict(a)
+    return _to_dict(a, db)
 
 
 def submit_vak(db: DbSession, assessment_id: str, user: Profile, data: VakRequest) -> dict:
@@ -149,7 +177,7 @@ def submit_vak(db: DbSession, assessment_id: str, user: Profile, data: VakReques
     a.status       = AssessmentStatus.in_progress
     db.commit()
     db.refresh(a)
-    return _to_dict(a)
+    return _to_dict(a, db)
 
 
 def submit_riasec(db: DbSession, assessment_id: str, user: Profile, data: RiasecRequest) -> dict:
@@ -161,7 +189,7 @@ def submit_riasec(db: DbSession, assessment_id: str, user: Profile, data: Riasec
     a.riasec_code   = _riasec_code(scores)
     db.commit()
     db.refresh(a)
-    return _to_dict(a)
+    return _to_dict(a, db)
 
 
 def submit_disc(db: DbSession, assessment_id: str, user: Profile, data: DiscRequest) -> dict:
@@ -173,7 +201,7 @@ def submit_disc(db: DbSession, assessment_id: str, user: Profile, data: DiscRequ
     a.disc_dominant = _disc_dominant(scores)
     db.commit()
     db.refresh(a)
-    return _to_dict(a)
+    return _to_dict(a, db)
 
 
 def validate_assessment(
@@ -193,10 +221,36 @@ def validate_assessment(
     a.validated_at  = datetime.now(timezone.utc)
     db.commit()
     db.refresh(a)
-    return _to_dict(a)
+    return _to_dict(a, db)
 
 
 def get_assessment(db: DbSession, assessment_id: str, user: Profile) -> dict:
     """Retourne un bilan par son ID (acteur propriétaire uniquement)."""
     cp = _get_canope_profile(db, user)
-    return _to_dict(_get_assessment(db, assessment_id, cp))
+    return _to_dict(_get_assessment(db, assessment_id, cp), db)
+
+
+def get_assessment_stats(db: DbSession, user: Profile) -> dict:
+    """Statistiques agrégées des bilans pour le dashboard CANOPE/COSP."""
+    from datetime import datetime, timezone
+
+    cp  = _get_canope_profile(db, user)
+    now = datetime.now(timezone.utc)
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    # Base filtrée sur l'acteur courant — chaque .filter() crée une nouvelle requête
+    q           = db.query(Assessment).filter(Assessment.administered_by == cp.id)
+    total       = q.count()
+    draft       = q.filter(Assessment.status == AssessmentStatus.draft).count()
+    in_progress = q.filter(Assessment.status == AssessmentStatus.in_progress).count()
+    validated   = q.filter(Assessment.status == AssessmentStatus.validated).count()
+    this_month  = q.filter(Assessment.created_at >= month_start).count()
+
+    return {
+        "total":           total,
+        "draft":           draft,
+        "in_progress":     in_progress,
+        "validated":       validated,
+        "this_month":      this_month,
+        "completion_rate": round(validated / total * 100) if total > 0 else 0,
+    }

@@ -108,7 +108,8 @@ export function AssessmentDetailClient({ assessmentId, locale, basePath }: Asses
       }`}>
         <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-bold text-text-primary flex items-center gap-3">
-            Bilan : {assessment.student_profile_id ? "Élève MIABO" : "Jeune externe"}
+            {assessment.external_young_full_name
+              ?? (assessment.student_profile_id ? "Élève MIABO" : "Jeune externe")}
           </h1>
           <div className="flex items-center gap-2 text-sm font-medium">
             <span className={`flex h-2.5 w-2.5 rounded-full ${

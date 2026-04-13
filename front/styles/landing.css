@@ -1,0 +1,174 @@
+/**
+ * Styles spécifiques pour la Landing Page MIABO.
+ * Inspirés du design TGR : couleurs vibrantes, textures de bruit, cadres irréguliers.
+ */
+
+.landing-container {
+  --color-landing-blue: #3a6cf8;
+  --color-landing-purple: #1e3aec; /* More vibrant purple like capture */
+  --color-landing-pink: #d946ef;
+  --color-landing-green: #22c55e;
+  --color-landing-yellow: #facc15;
+}
+
+/* ── Motifs Arrière-plan Hero ────────────────────────────────────────── */
+.hero-circuit-pattern {
+  mask-image: url('https://www.transparenttextures.com/patterns/circuit-board.png');
+  background-color: rgba(0,0,0,0.2);
+  width: 500px;
+  height: 500px;
+  position: absolute;
+  top: 10%;
+  right: 5%;
+  z-index: 0;
+  opacity: 0.6;
+}
+
+.hero-cyan-shape {
+  background-color: #06b6d4;
+  clip-path: polygon(25% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 25%);
+  width: 300px;
+  height: 400px;
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  z-index: -1;
+  opacity: 0.8;
+}
+
+/* ── Slider Dots ─────────────────────────────────────────────────────── */
+.slider-dots .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: white;
+  opacity: 0.4;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+
+.slider-dots .dot.active {
+  opacity: 1;
+}
+
+/* ── Texture de bruit (Noise Overlay) ────────────────────────────────── */
+.noise-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.noise-bg::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── Cadres irréguliers (Brushed look) ───────────────────────────────── */
+.brushed-frame {
+  position: relative;
+  padding: 12px;
+  background: white;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  transform: rotate(-1.5deg);
+  mask-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 5 L95 2 L98 95 L2 98 Z" fill="black" /></svg>');
+}
+
+.brushed-frame:hover {
+  transform: rotate(0deg) scale(1.02);
+}
+
+/* On utilise des masques ou des bordures irrégulières via SVG si possible, 
+   ou alors un style CSS "rough" */
+.brushed-border {
+  border: 12px solid white;
+  border-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><path d="M0 0 L100 0 L100 100 L0 100 Z" fill="none" stroke="black" stroke-width="10" stroke-linejoin="round" /></svg>') 30 stretch;
+}
+
+/* ── Typographie ──────────────────────────────────────────────────────── */
+.font-bold-title {
+  font-family: var(--font-display);
+  font-weight: 900; /* Extra thick like capture */
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+}
+
+/* ── Hand-drawn highlights ───────────────────────────────────────────── */
+.highlight-sketch {
+  position: relative;
+  z-index: 1;
+}
+
+.highlight-sketch::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: -5%;
+  width: 110%;
+  height: 20px;
+  background-color: var(--color-landing-yellow);
+  z-index: -1;
+  transform: rotate(-1deg);
+  opacity: 0.6;
+}
+
+/* ── Brushed Badge ─────────────────────────────────────────────────── */
+.brushed-badge {
+  background: white;
+  padding: 10px 30px;
+  clip-path: polygon(2% 10%, 98% 2%, 96% 92%, 4% 98%);
+  color: black;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+/* ── Boutons Style TGR ────────────────────────────────────────────────── */
+.btn-brushed {
+  position: relative;
+  display: inline-block;
+  padding: 0.75rem 2rem;
+  background: #000;
+  color: #fff;
+  font-weight: 700;
+  border-radius: 9999px;
+  text-transform: capitalize;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.btn-brushed:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
+}
+
+.btn-brushed-white {
+  background: #fff;
+  color: #000;
+}
+
+/* ── Sections Couleurs ───────────────────────────────────────────────── */
+.section-purple { background-color: var(--color-primary-600); color: white; }
+.section-pink { background-color: #f0abfc; color: #701a75; }
+.section-green { background-color: #4ade80; color: #064e3b; }
+
+/* ── Fond grille abstraite pour card 3 services ──────────────────────── */
+.service-card-grid-pattern {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* ── Floating elements animation ─────────────────────────────────────── */
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(2deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+.float-anim {
+  animation: float 6s ease-in-out infinite;
+}

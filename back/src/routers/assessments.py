@@ -14,6 +14,12 @@ from src.services import assessments as svc
 router = APIRouter(prefix="/assessments", tags=["Évaluations"])
 
 
+@router.get("/stats")
+async def get_stats(current_user: CurrentUser, db: DbDep):
+    """Statistiques agrégées des bilans pour le dashboard CANOPE/COSP."""
+    return svc.get_assessment_stats(db, current_user)
+
+
 @router.get("/")
 async def list_assessments(current_user: CurrentUser, db: DbDep):
     """Liste les bilans administrés par l'acteur connecté."""
