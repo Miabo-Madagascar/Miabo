@@ -101,7 +101,7 @@ export function AssessmentDetailClient({ assessmentId, locale, basePath }: Asses
   const isLocked = assessment.status === AssessmentStatus.Validated
 
   return (
-    <div className="flex flex-col gap-8 pb-10">
+    <div className="flex w-full flex-col gap-8 pb-10">
       {/* ── Header ────────────────────────────────────────────── */}
       <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl p-6 border ${
         isLocked ? "bg-success/5 border-success/20" : "bg-primary-50 border-primary-100"
