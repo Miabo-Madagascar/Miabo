@@ -1,135 +1,116 @@
 "use client"
 /**
- * AssessmentListClient — liste des bilans d'orientation de l'acteur connecté.
+ * AssessmentListClient — tableau des bilans avec filtre/tri/recherche (CDC §5).
+ * Colonnes : Nom complet | Date & heure | VAK | RIASEC | DISC | Statut | Modifier
  */
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { api, ApiError } from "@/lib/api/client"
 import { AssessmentStatus } from "@/types"
 import type { Assessment } from "@/types"
+import { AssessmentFilters, type FilterState } from "./AssessmentFilters"
 
-interface AssessmentListClientProps {
-  locale:   string
-  basePath: string  // "canope" | "cosp"
+interface Props { locale: string; basePath: string }
+
+const STATUS_CFG = {
+  [AssessmentStatus.Draft]:      { label: "Brouillon", cls: "bg-gray-100 text-gray-600" },
+  [AssessmentStatus.InProgress]: { label: "En cours",  cls: "bg-primary-50 text-primary-700" },
+  [AssessmentStatus.Validated]:  { label: "Validé",    cls: "bg-success/10 text-success" },
 }
 
-const STATUS_LABEL: Record<AssessmentStatus, { label: string; classes: string }> = {
-  [AssessmentStatus.Draft]:      { label: "Brouillon",    classes: "bg-gray-100 text-gray-600 border border-gray-200" },
-  [AssessmentStatus.InProgress]: { label: "En cours",     classes: "bg-primary-50 text-primary-700 border border-primary-200" },
-  [AssessmentStatus.Validated]:  { label: "Validé",       classes: "bg-success/10 text-success border border-success/20" },
-}
+const EMPTY_FILTERS: FilterState = { search: "", dateFrom: "", dateTo: "", sortBy: "date_desc" }
 
-export function AssessmentListClient({ locale, basePath }: AssessmentListClientProps) {
-  const [assessments, setAssessments] = useState<Assessment[]>([])
-  const [isLoading,   setIsLoading]   = useState(true)
-  const [error,       setError]       = useState<string | null>(null)
+export function AssessmentListClient({ locale, basePath }: Props) {
+  const [rows,    setRows]    = useState<Assessment[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState<string | null>(null)
+  const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS)
 
   useEffect(() => {
     api.get<Assessment[]>("/assessments/")
-      .then(setAssessments)
-      .catch((err) => setError(err instanceof ApiError ? err.detail : "Erreur de chargement"))
-      .finally(() => setIsLoading(false))
+      .then(setRows)
+      .catch(err => setError(err instanceof ApiError ? err.detail : "Erreur de chargement"))
+      .finally(() => setLoading(false))
   }, [])
 
-  if (isLoading) return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {[1, 2, 3].map((i) => <div key={i} className="h-48 animate-pulse rounded-2xl bg-bg-muted" />)}
-    </div>
-  )
+  const filtered = useMemo(() => {
+    let data = [...rows]
+    if (filters.search) {
+      const q = filters.search.toLowerCase()
+      data = data.filter(a => (a.external_young_full_name ?? "").toLowerCase().includes(q))
+    }
+    if (filters.dateFrom) data = data.filter(a => a.created_at >= filters.dateFrom)
+    if (filters.dateTo)   data = data.filter(a => a.created_at <= filters.dateTo + "T23:59:59")
+    data.sort((a, b) => {
+      if (filters.sortBy === "date_asc")  return a.created_at.localeCompare(b.created_at)
+      if (filters.sortBy === "name_asc")  return (a.external_young_full_name ?? "").localeCompare(b.external_young_full_name ?? "")
+      if (filters.sortBy === "name_desc") return (b.external_young_full_name ?? "").localeCompare(a.external_young_full_name ?? "")
+      return b.created_at.localeCompare(a.created_at)
+    })
+    return data
+  }, [rows, filters])
 
-  if (error) return (
-    <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-error">{error}</p>
-  )
-
-  if (assessments.length === 0) return (
-    <div className="flex flex-col items-center justify-center gap-4 rounded-3xl border-2 border-dashed border-border bg-bg-subtle p-12 text-center mt-8">
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-100 text-primary shadow-inner">
-         <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-         </svg>
-      </div>
-      <div>
-        <p className="text-xl font-bold text-text-primary">Aucun bilan créé</p>
-        <p className="text-sm text-text-secondary mt-1 max-w-sm mx-auto">
-          Vous n&apos;avez pas encore créé de bilan d&apos;orientation. Commencez par en ajouter un pour un élève ou un jeune externe.
-        </p>
-      </div>
-      <Link 
-        href={`/${locale}/${basePath}/bilans/nouveau`} 
-        className="mt-4 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary/30 transition-all hover:scale-105 hover:bg-primary-600"
-      >
-        Créer mon premier bilan
-      </Link>
-    </div>
-  )
+  if (loading) return <div className="h-48 animate-pulse rounded-xl bg-bg-muted" />
+  if (error)   return <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-error">{error}</p>
 
   return (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {assessments.map((a) => {
-        const cfg    = STATUS_LABEL[a.status as AssessmentStatus] ?? STATUS_LABEL[AssessmentStatus.Draft]
-        const date   = new Date(a.created_at).toLocaleDateString("fr-MG", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute:"2-digit" })
-        // Nom du jeune — préfère le nom résolu, sinon fallback
-        const subject = a.external_young_full_name ?? (a.student_profile_id ? "Élève MIABO" : "Jeune externe")
+    <div className="flex flex-col gap-4">
+      <AssessmentFilters
+        filters={filters} total={rows.length} filtered={filtered.length}
+        onChange={p => setFilters(prev => ({ ...prev, ...p }))}
+      />
 
-        let completed = 0;
-        if (a.vak_dominant) completed++;
-        if (a.riasec_code) completed++;
-        if (a.disc_dominant) completed++;
-        
-        return (
-          <div key={a.id} className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border bg-bg-base p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary-300 hover:shadow-xl">
-            {a.status === AssessmentStatus.Validated && (
-               <div className="absolute top-0 left-0 h-1 w-full bg-success opacity-70" />
-            )}
-            {a.status === AssessmentStatus.InProgress && (
-               <div className="absolute top-0 left-0 h-1 w-full bg-primary opacity-50" />
-            )}
-            
-            <div className="flex items-start justify-between mb-5">
-              <div>
-                <p className="font-bold text-text-primary text-xl tracking-tight">{subject}</p>
-                <p className="text-xs text-text-muted mt-1">{date}</p>
-              </div>
-              <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${cfg.classes}`}>
-                {cfg.label}
-              </span>
-            </div>
-            
-            <div className="flex-1 mb-6">
-              <div className="flex items-center justify-between text-xs font-semibold text-text-secondary mb-2.5">
-                <span>Progression</span>
-                <span>{completed}/3 tests</span>
-              </div>
-              <div className="h-2.5 w-full bg-bg-muted rounded-full overflow-hidden mb-5">
-                <div 
-                  className={`h-full transition-all duration-1000 ${completed === 3 ? "bg-success" : "bg-primary"}`} 
-                  style={{ width: `${(completed/3)*100}%` }} 
-                />
-              </div>
-              
-              <div className="flex flex-wrap gap-2 text-[10px] font-bold text-text-secondary">
-                {a.vak_dominant ? <span className="bg-bg-subtle px-2 py-1.5 rounded-lg border">VAK : <span className="text-primary">{a.vak_dominant}</span></span> : null}
-                {a.riasec_code ? <span className="bg-bg-subtle px-2 py-1.5 rounded-lg border">RIASEC : <span className="text-primary">{a.riasec_code}</span></span> : null}
-                {a.disc_dominant ? <span className="bg-bg-subtle px-2 py-1.5 rounded-lg border">DISC : <span className="text-primary">{a.disc_dominant}</span></span> : null}
-                {completed === 0 && <span className="italic opacity-50 font-normal">Aucun résultat</span>}
-              </div>
-            </div>
-
-            <div className="mt-auto pt-4 border-t border-border flex items-center justify-between">
-              <span className="text-[10px] font-medium text-text-muted truncate mr-4">
-                 ID: {a.id.slice(0,8)}...
-              </span>
-              <Link
-                href={`/${locale}/${basePath}/bilans/${a.id}`}
-                className="shrink-0 rounded-xl bg-bg-subtle px-5 py-2.5 text-xs font-bold text-text-primary transition-all group-hover:bg-primary group-hover:text-white"
-              >
-                Modifier
-              </Link>
-            </div>
-          </div>
-        )
-      })}
+      {filtered.length === 0 ? (
+        <div className="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-border bg-bg-subtle p-10 text-center">
+          <p className="text-base font-bold text-text-primary">Aucun bilan trouvé</p>
+          <p className="text-sm text-text-secondary">Essayez de modifier les filtres de recherche.</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-2xl border border-border bg-bg-base shadow-sm">
+          <table className="w-full min-w-160 text-sm">
+            <thead className="border-b border-border bg-bg-subtle">
+              <tr className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
+                <th className="px-5 py-3 text-left">Nom complet</th>
+                <th className="px-4 py-3 text-center">Date &amp; heure</th>
+                <th className="px-4 py-3 text-center">VAK</th>
+                <th className="px-4 py-3 text-center">RIASEC</th>
+                <th className="px-4 py-3 text-center">DISC</th>
+                <th className="px-4 py-3 text-center">Statut</th>
+                <th className="px-4 py-3" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {filtered.map(a => {
+                const cfg  = STATUS_CFG[a.status as AssessmentStatus] ?? STATUS_CFG[AssessmentStatus.Draft]
+                const name = a.external_young_full_name ?? (a.student_profile_id ? "Élève MIABO" : "Jeune externe")
+                const date = new Date(a.created_at).toLocaleDateString("fr-MG", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+                const val  = (v: string | null) => v
+                  ? <span className="font-bold text-primary">{v}</span>
+                  : <span className="text-text-muted">—</span>
+                return (
+                  <tr key={a.id} className="transition-colors hover:bg-bg-subtle">
+                    <td className="px-5 py-3 font-semibold text-text-primary">{name}</td>
+                    <td className="px-4 py-3 text-center text-xs text-text-muted">{date}</td>
+                    <td className="px-4 py-3 text-center">{val(a.vak_dominant)}</td>
+                    <td className="px-4 py-3 text-center">{val(a.riasec_code)}</td>
+                    <td className="px-4 py-3 text-center">{val(a.disc_dominant)}</td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${cfg.cls}`}>{cfg.label}</span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Link href={`/${locale}/${basePath}/bilans/${a.id}`}
+                        className="rounded-lg bg-bg-muted px-4 py-1.5 text-xs font-semibold text-text-primary transition-colors hover:bg-primary hover:text-white">
+                        Modifier
+                      </Link>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }
