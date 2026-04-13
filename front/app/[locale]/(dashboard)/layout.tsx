@@ -23,21 +23,22 @@ export default async function DashboardLayout({ children, params }: DashboardLay
   const role = user?.user_metadata?.role || "student"
 
   return (
-    <div className="flex min-h-screen bg-bg-subtle">
+    /* h-screen + overflow-hidden : le sidebar ne bouge pas lors d'un scroll horizontal */
+    <div className="flex h-screen overflow-hidden bg-bg-subtle">
       <Sidebar locale={locale} role={role} />
 
-      <div className="flex flex-1 flex-col">
-        <header className="flex h-16 items-center justify-between border-b border-border bg-bg-base px-6">
-          <span className="font-semibold text-primary-500">
-            MIABO
-          </span>
+      {/* min-w-0 empêche le débordement flex du contenu */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-bg-base px-6">
+          <span className="font-semibold text-primary-500">MIABO</span>
           <div className="flex items-center gap-4">
             <NotificationBell locale={locale} />
             <LogoutButton locale={locale} />
           </div>
         </header>
 
-        <main className="flex-1 p-6 overflow-y-auto">
+        {/* overflow-auto : seul le contenu scrolle, jamais le sidebar */}
+        <main className="flex-1 overflow-auto p-6">
           {children}
         </main>
       </div>
