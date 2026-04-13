@@ -37,18 +37,20 @@ export function VakTest({ onSave, onCancel }: Props) {
   const handleSave = async () => {
     setLoading(true)
     try {
-      const scores: any = { V: 0, A: 0, K: 0 }
+      // Accumulation des scores par type (clés internes uppercase pour correspondre à q.type)
+      const totals: Record<string, number> = { V: 0, A: 0, K: 0 }
       QUESTIONS.forEach(q => {
-        scores[q.type] += (answers[q.id] || 0)
+        totals[q.type] += (answers[q.id] || 0)
       })
-      await onSave(scores)
+      // Remappage vers les clés lowercase attendues par onSave
+      await onSave({ v: totals.V, a: totals.A, k: totals.K })
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="flex flex-col gap-8 pb-10">
+    <div className="flex flex-col gap-8 pb-10 w-[70%]">
       {/* ── Header & Progress ────────────────────────────────────── */}
       <div className="sticky top-0 z-10 -mx-4 bg-bg-base/80 px-4 py-4 backdrop-blur-md sm:-mx-6 sm:px-6">
         <div className="flex items-center justify-between mb-4">
@@ -79,7 +81,7 @@ export function VakTest({ onSave, onCancel }: Props) {
         {QUESTIONS.map((q, idx) => (
           <div 
             key={q.id} 
-            className={`group relative overflow-hidden rounded-2xl border p-5 transition-all duration-300 ${
+            className={`flex flex-col items-center group relative overflow-hidden rounded-2xl border p-5 transition-all duration-300 ${
               answers[q.id] 
                 ? "border-primary-100 bg-primary-50" 
                 : "border-border bg-bg-base hover:border-primary-200 hover:shadow-sm"
@@ -92,10 +94,10 @@ export function VakTest({ onSave, onCancel }: Props) {
               <p className="text-base font-medium leading-normal text-text-primary">{q.text}</p>
             </div>
 
-            <div className="relative flex items-center justify-between gap-4 px-2 sm:px-12">
+            <div className="relative flex items-center w-[80%] justify-between gap-4 px-2 sm:px-12">
               <span className="hidden text-[10px] font-bold uppercase tracking-wider text-text-muted sm:block">Non</span>
               
-              <div className="flex flex-1 items-center justify-around gap-2">
+              <div className="flex flex-1 items-center justify-around gap-5">
                 {[1, 2, 3, 4, 5].map(val => {
                   const isSelected = answers[q.id] === val
 
@@ -128,7 +130,7 @@ export function VakTest({ onSave, onCancel }: Props) {
           isLoading={loading} 
           disabled={!isComplete}
           className={`w-full max-w-sm rounded-xl py-6 text-lg font-bold transition-all duration-300 ${
-            isComplete ? "bg-orange-600 hover:bg-orange-700 shadow-xl shadow-orange-100" : "opacity-40"
+            isComplete ? "scale-105 shadow-primary-200" : "opacity-50"
           }`}
         >
           {isComplete ? "Enregistrer les scores VAK" : "Continuez pour voir votre profil"}

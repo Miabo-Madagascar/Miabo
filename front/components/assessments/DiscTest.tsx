@@ -44,7 +44,7 @@ export function DiscTest({ onSave, onCancel }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-8 pb-10">
+    <div className="flex flex-col gap-8 pb-10 w-[70%]">
       {/* ── Header & Progress ────────────────────────────────────── */}
       <div className="sticky top-0 z-10 -mx-4 bg-bg-base/80 px-4 py-4 backdrop-blur-md sm:-mx-6 sm:px-6">
         <div className="flex items-center justify-between mb-4">
@@ -75,7 +75,7 @@ export function DiscTest({ onSave, onCancel }: Props) {
         {QUESTIONS.map((q, idx) => (
           <div 
             key={q.id} 
-            className={`group relative overflow-hidden rounded-2xl border p-6 transition-all duration-300 ${
+            className={`flex flex-col items-center group relative overflow-hidden rounded-2xl border p-6 transition-all duration-300 ${
               answers[q.id] 
                 ? "border-primary-100 bg-primary-50" 
                 : "border-border bg-bg-base hover:border-primary-200 hover:shadow-md"
@@ -88,10 +88,10 @@ export function DiscTest({ onSave, onCancel }: Props) {
               <p className="text-lg font-medium leading-tight text-text-primary">{q.text}</p>
             </div>
 
-            <div className="relative flex items-center justify-between gap-2 px-2 sm:px-10">
+            <div className="relative flex items-center w-[80%] justify-between gap-2 px-2 sm:px-10">
               <span className="hidden text-[10px] font-bold uppercase tracking-tighter text-text-muted sm:block">Désaccord</span>
               
-              <div className="flex flex-1 items-center justify-around gap-1 sm:gap-4">
+              <div className="flex flex-1 items-center justify-around gap-5 sm:gap-4">
                 {[1, 2, 3, 4, 5].map(val => {
                   const isSelected = answers[q.id] === val
                   const sizes = ["h-12 w-12", "h-10 w-10", "h-8 w-8", "h-10 w-10", "h-12 w-12"]
