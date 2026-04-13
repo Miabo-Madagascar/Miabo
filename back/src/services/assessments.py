@@ -208,4 +208,30 @@ def validate_assessment(
 def get_assessment(db: DbSession, assessment_id: str, user: Profile) -> dict:
     """Retourne un bilan par son ID (acteur propriétaire uniquement)."""
     cp = _get_canope_profile(db, user)
-    return _to_dict(_get_assessment(db, assessment_id, cp))
+    return _to_dict(_get_assessment(db, assessment_id, cp), db)
+
+
+def get_assessment_stats(db: DbSession, user: Profile) -> dict:
+    """Statistiques agrégées des bilans pour le dashboard CANOPE/COSP."""
+    from datetime import datetime, timezone
+
+    cp  = _get_canope_profile(db, user)
+    now = datetime.now(timezone.utc)
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    # Base filtrée sur l'acteur courant — chaque .filter() crée une nouvelle requête
+    q           = db.query(Assessment).filter(Assessment.administered_by == cp.id)
+    total       = q.count()
+    draft       = q.filter(Assessment.status == AssessmentStatus.draft).count()
+    in_progress = q.filter(Assessment.status == AssessmentStatus.in_progress).count()
+    validated   = q.filter(Assessment.status == AssessmentStatus.validated).count()
+    this_month  = q.filter(Assessment.created_at >= month_start).count()
+
+    return {
+        "total":           total,
+        "draft":           draft,
+        "in_progress":     in_progress,
+        "validated":       validated,
+        "this_month":      this_month,
+        "completion_rate": round(validated / total * 100) if total > 0 else 0,
+    }

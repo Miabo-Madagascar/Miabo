@@ -1,65 +1,68 @@
 /**
- * Dashboard CANOPE — bilans d'orientation, ressources pédagogiques, profil.
- * CANOPE administre les bilans VAK/RIASEC/DISC pour les élèves inscrits sur MIABO.
+ * Dashboard CANOPE — insights, bilans récents, actions rapides.
+ * CDC CAN-001 : compteur jeunes, tableau récapitulatif, sessions à venir.
  */
 
 import Link from "next/link"
 import { DashboardWelcome } from "@/components/dashboard/DashboardWelcome"
+import { CanopeDashboardStats } from "@/components/canope/CanopeDashboardStats"
+import { CanopeDashboardRecentBilans } from "@/components/canope/CanopeDashboardRecentBilans"
 
 interface Props { params: Promise<{ locale: string }> }
 
 export default async function CanopeDashboardPage({ params }: Props) {
   const { locale } = await params
+  const base = "canope"
 
   return (
     <div className="flex flex-col gap-6">
+      {/* ── Bandeau d'accueil ──────────────────────────────────── */}
       <DashboardWelcome />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Link
-          href={`/${locale}/canope/bilans`}
-          className="flex flex-col gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-base)] p-5 hover:border-[var(--color-primary-300)] hover:shadow-[var(--shadow-sm)] transition-all"
-        >
-          <span className="text-2xl">📊</span>
-          <h3 className="font-semibold text-[var(--text-primary)]">Bilans d&apos;orientation</h3>
-          <p className="text-sm text-[var(--text-secondary)]">
-            Créez et gérez les bilans VAK, RIASEC et DISC des élèves.
-          </p>
-        </Link>
+      {/* ── KPI + taux de complétion ────────────────────────────── */}
+      <CanopeDashboardStats locale={locale} basePath={base} />
 
-        <Link
-          href={`/${locale}/canope/ressources`}
-          className="flex flex-col gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-base)] p-5 hover:border-[var(--color-primary-300)] hover:shadow-[var(--shadow-sm)] transition-all"
-        >
-          <span className="text-2xl">📚</span>
-          <h3 className="font-semibold text-[var(--text-primary)]">Ressources pédagogiques</h3>
-          <p className="text-sm text-[var(--text-secondary)]">
-            Publiez et gérez les ressources certifiées CANOPE.
-          </p>
-        </Link>
+      {/* ── Tableau des 5 derniers bilans ────────────────────────── */}
+      <CanopeDashboardRecentBilans locale={locale} basePath={base} />
 
-        <Link
-          href={`/${locale}/messages`}
-          className="flex flex-col gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-base)] p-5 hover:border-[var(--color-primary-300)] hover:shadow-[var(--shadow-sm)] transition-all"
-        >
-          <span className="text-2xl">💬</span>
-          <h3 className="font-semibold text-[var(--text-primary)]">Messages</h3>
-          <p className="text-sm text-[var(--text-secondary)]">
-            Échangez avec les élèves et leurs familles.
-          </p>
-        </Link>
+      {/* ── Actions rapides ─────────────────────────────────────── */}
+      <section>
+        <h2 className="mb-3 text-base font-bold text-text-primary">Actions rapides</h2>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Link
+            href={`/${locale}/${base}/bilans`}
+            className="flex items-center gap-3 rounded-xl border border-border bg-bg-base p-4 transition-all hover:border-primary-300 hover:shadow-sm"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-xl">📊</span>
+            <div>
+              <p className="text-sm font-semibold text-text-primary">Tous les bilans</p>
+              <p className="text-xs text-text-muted">VAK · RIASEC · DISC</p>
+            </div>
+          </Link>
 
-        <Link
-          href={`/${locale}/profil`}
-          className="flex flex-col gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-base)] p-5 hover:border-[var(--color-primary-300)] hover:shadow-[var(--shadow-sm)] transition-all"
-        >
-          <span className="text-2xl">👤</span>
-          <h3 className="font-semibold text-[var(--text-primary)]">Mon profil</h3>
-          <p className="text-sm text-[var(--text-secondary)]">
-            Modifiez vos informations personnelles.
-          </p>
-        </Link>
-      </div>
+          <Link
+            href={`/${locale}/${base}/ressources`}
+            className="flex items-center gap-3 rounded-xl border border-border bg-bg-base p-4 transition-all hover:border-primary-300 hover:shadow-sm"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-xl">📚</span>
+            <div>
+              <p className="text-sm font-semibold text-text-primary">Ressources</p>
+              <p className="text-xs text-text-muted">Contenus certifiés CANOPE</p>
+            </div>
+          </Link>
+
+          <Link
+            href={`/${locale}/messages`}
+            className="flex items-center gap-3 rounded-xl border border-border bg-bg-base p-4 transition-all hover:border-primary-300 hover:shadow-sm"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-xl">💬</span>
+            <div>
+              <p className="text-sm font-semibold text-text-primary">Messages</p>
+              <p className="text-xs text-text-muted">Élèves et familles</p>
+            </div>
+          </Link>
+        </div>
+      </section>
     </div>
   )
 }

@@ -30,18 +30,30 @@ interface SidebarProps {
   role:   string
 }
 
+// Chemin racine du dashboard par rôle
+const ROLE_ROOT: Record<string, string> = {
+  student: "/eleve",
+  tutor:   "/tuteur",
+  parent:  "/parent",
+  admin:   "/admin",
+  canope:  "/canope",
+  cosp:    "/cosp",
+}
+
 const MENU_ITEMS: NavItem[] = [
-  { label: "Dashboard",        href: "",                     icon: BarChart3,     roles: ["student", "tutor", "parent", "admin", "canope", "cosp"] },
-  { label: "Trouver Tuteur",  href: "/tuteurs",             icon: Search,        roles: ["student"] },
-  { label: "Sessions",         href: "/sessions",            icon: Calendar,      roles: ["student", "tutor", "parent"] },
-  { label: "Messages",         href: "/messages",            icon: MessageSquare, roles: ["student", "tutor", "parent", "admin"] },
-  { label: "Portefeuille",     href: "/wallet",              icon: Wallet,        roles: ["student", "tutor", "parent"] },
-  { label: "Disponibilités", href: "/tuteur/disponibilites", icon: BookOpen,      roles: ["tutor"] },
-  { label: "Bilans",           href: "/canope/bilans",       icon: ClipboardList, roles: ["canope", "cosp", "admin"] },
-  { label: "Validation Tuteurs", href: "/canope/tuteurs",    icon: Users,         roles: ["canope", "admin"] },
-  { label: "Ressources",       href: "/canope/ressources",   icon: BookOpen,      roles: ["canope", "cosp", "student"] },
-  { label: "Utilisateurs",     href: "/admin/users",         icon: Users,         roles: ["admin"] },
-  { label: "Mon Profil",       href: "/profil",              icon: User,          roles: ["student", "tutor", "parent", "admin", "canope", "cosp"] },
+  { label: "Dashboard",          href: "",                      icon: BarChart3,     roles: ["student", "tutor", "parent", "admin", "canope", "cosp"] },
+  { label: "Trouver Tuteur",     href: "/tuteurs",              icon: Search,        roles: ["student"] },
+  { label: "Sessions",           href: "/sessions",             icon: Calendar,      roles: ["student", "tutor", "parent"] },
+  { label: "Messages",           href: "/messages",             icon: MessageSquare, roles: ["student", "tutor", "parent", "admin"] },
+  { label: "Portefeuille",       href: "/wallet",               icon: Wallet,        roles: ["student", "tutor", "parent"] },
+  { label: "Disponibilités",     href: "/tuteur/disponibilites",icon: BookOpen,      roles: ["tutor"] },
+  { label: "Bilans",             href: "/bilans",               icon: ClipboardList, roles: ["canope", "cosp"] },
+  { label: "Bilans",             href: "/canope/bilans",        icon: ClipboardList, roles: ["admin"] },
+  { label: "Validation Tuteurs", href: "/canope/tuteurs",       icon: Users,         roles: ["canope", "admin"] },
+  { label: "Ressources",         href: "/ressources",           icon: BookOpen,      roles: ["canope", "cosp"] },
+  { label: "Ressources",         href: "/canope/ressources",    icon: BookOpen,      roles: ["student"] },
+  { label: "Utilisateurs",       href: "/admin/users",          icon: Users,         roles: ["admin"] },
+  { label: "Mon Profil",         href: "/profil",               icon: User,          roles: ["student", "tutor", "parent", "admin", "canope", "cosp"] },
 ]
 
 export function Sidebar({ locale, role }: SidebarProps) {
@@ -66,8 +78,10 @@ export function Sidebar({ locale, role }: SidebarProps) {
       {/* ── Navigation ─────────────────────────────────────────── */}
       <nav className="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-1">
         {filteredItems.map((item) => {
-          const fullHref = `/${locale}${item.href || ""}`
-          const isActive = pathname === fullHref || (item.href !== "" && pathname.startsWith(fullHref))
+          // Dashboard : href vide → chemin racine du rôle courant
+          const resolved = item.href === "" ? (ROLE_ROOT[role] ?? "") : item.href
+          const fullHref = `/${locale}${resolved}`
+          const isActive = pathname === fullHref || (resolved !== "" && pathname.startsWith(fullHref))
           const Icon = item.icon
 
           return (

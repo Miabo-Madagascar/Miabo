@@ -9,6 +9,16 @@ import type { Notification }  from "./db.messaging.types"
 
 // ── Évaluations orientation ────────────────────────────────────────────────
 
+/** GET /api/v1/assessments/stats */
+export interface AssessmentStats {
+  total:           number
+  draft:           number
+  in_progress:     number
+  validated:       number
+  this_month:      number
+  completion_rate: number   // pourcentage 0-100
+}
+
 /** POST /api/v1/assessments */
 export interface CreateAssessmentRequest {
   external_young_full_name: string

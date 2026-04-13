@@ -1,76 +1,79 @@
 /**
- * Dashboard COSP — bilans d'orientation, jeunes externes, ressources, profil.
- * COSP = CANOPE + accès aux jeunes non scolarisés (ExternalYoungProfile).
+ * Dashboard COSP — hérite de CANOPE + jeunes externes, bilans personnalisés.
+ * CDC COSP-001 : mêmes insights que CANOPE + accès aux jeunes non scolarisés.
  */
 
 import Link from "next/link"
 import { DashboardWelcome } from "@/components/dashboard/DashboardWelcome"
+import { CanopeDashboardStats } from "@/components/canope/CanopeDashboardStats"
+import { CanopeDashboardRecentBilans } from "@/components/canope/CanopeDashboardRecentBilans"
 
 interface Props { params: Promise<{ locale: string }> }
 
 export default async function CospDashboardPage({ params }: Props) {
   const { locale } = await params
+  const base = "cosp"
 
   return (
     <div className="flex flex-col gap-6">
+      {/* ── Bandeau d'accueil ──────────────────────────────────── */}
       <DashboardWelcome />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Link
-          href={`/${locale}/cosp/bilans`}
-          className="flex flex-col gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-base)] p-5 hover:border-[var(--color-primary-300)] hover:shadow-[var(--shadow-sm)] transition-all"
-        >
-          <span className="text-2xl">📊</span>
-          <h3 className="font-semibold text-[var(--text-primary)]">Bilans d&apos;orientation</h3>
-          <p className="text-sm text-[var(--text-secondary)]">
-            Créez et gérez les bilans VAK, RIASEC et DISC.
-          </p>
-        </Link>
+      {/* ── KPI + taux de complétion ────────────────────────────── */}
+      <CanopeDashboardStats locale={locale} basePath={base} />
 
-        <Link
-          href={`/${locale}/cosp/jeunes`}
-          className="flex flex-col gap-2 rounded-xl border border-[var(--color-secondary-300)] bg-[var(--bg-base)] p-5 hover:border-[var(--color-secondary-500)] hover:shadow-[var(--shadow-sm)] transition-all"
-        >
-          <span className="text-2xl">🧑‍🎓</span>
-          <h3 className="font-semibold text-[var(--text-primary)]">Jeunes externes</h3>
-          <p className="text-sm text-[var(--text-secondary)]">
-            Accompagnez les jeunes non scolarisés non inscrits sur MIABO.
-          </p>
-        </Link>
+      {/* ── Tableau des 5 derniers bilans ────────────────────────── */}
+      <CanopeDashboardRecentBilans locale={locale} basePath={base} />
 
-        <Link
-          href={`/${locale}/cosp/ressources`}
-          className="flex flex-col gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-base)] p-5 hover:border-[var(--color-primary-300)] hover:shadow-[var(--shadow-sm)] transition-all"
-        >
-          <span className="text-2xl">📚</span>
-          <h3 className="font-semibold text-[var(--text-primary)]">Ressources pédagogiques</h3>
-          <p className="text-sm text-[var(--text-secondary)]">
-            Publiez et gérez les ressources certifiées CANOPE/COSP.
-          </p>
-        </Link>
+      {/* ── Actions rapides ─────────────────────────────────────── */}
+      <section>
+        <h2 className="mb-3 text-base font-bold text-text-primary">Actions rapides</h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Link
+            href={`/${locale}/${base}/bilans`}
+            className="flex items-center gap-3 rounded-xl border border-border bg-bg-base p-4 transition-all hover:border-primary-300 hover:shadow-sm"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-xl">📊</span>
+            <div>
+              <p className="text-sm font-semibold text-text-primary">Bilans</p>
+              <p className="text-xs text-text-muted">VAK · RIASEC · DISC</p>
+            </div>
+          </Link>
 
-        <Link
-          href={`/${locale}/messages`}
-          className="flex flex-col gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-base)] p-5 hover:border-[var(--color-primary-300)] hover:shadow-[var(--shadow-sm)] transition-all"
-        >
-          <span className="text-2xl">💬</span>
-          <h3 className="font-semibold text-[var(--text-primary)]">Messages</h3>
-          <p className="text-sm text-[var(--text-secondary)]">
-            Échangez avec les jeunes et leurs familles.
-          </p>
-        </Link>
+          <Link
+            href={`/${locale}/${base}/jeunes`}
+            className="flex items-center gap-3 rounded-xl border border-secondary-200 bg-bg-base p-4 transition-all hover:border-secondary-400 hover:shadow-sm"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary-50 text-xl">🧑‍🎓</span>
+            <div>
+              <p className="text-sm font-semibold text-text-primary">Jeunes externes</p>
+              <p className="text-xs text-text-muted">Non scolarisés</p>
+            </div>
+          </Link>
 
-        <Link
-          href={`/${locale}/profil`}
-          className="flex flex-col gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-base)] p-5 hover:border-[var(--color-primary-300)] hover:shadow-[var(--shadow-sm)] transition-all"
-        >
-          <span className="text-2xl">👤</span>
-          <h3 className="font-semibold text-[var(--text-primary)]">Mon profil</h3>
-          <p className="text-sm text-[var(--text-secondary)]">
-            Modifiez vos informations personnelles.
-          </p>
-        </Link>
-      </div>
+          <Link
+            href={`/${locale}/${base}/ressources`}
+            className="flex items-center gap-3 rounded-xl border border-border bg-bg-base p-4 transition-all hover:border-primary-300 hover:shadow-sm"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-xl">📚</span>
+            <div>
+              <p className="text-sm font-semibold text-text-primary">Ressources</p>
+              <p className="text-xs text-text-muted">Contenus certifiés</p>
+            </div>
+          </Link>
+
+          <Link
+            href={`/${locale}/messages`}
+            className="flex items-center gap-3 rounded-xl border border-border bg-bg-base p-4 transition-all hover:border-primary-300 hover:shadow-sm"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-xl">💬</span>
+            <div>
+              <p className="text-sm font-semibold text-text-primary">Messages</p>
+              <p className="text-xs text-text-muted">Jeunes et familles</p>
+            </div>
+          </Link>
+        </div>
+      </section>
     </div>
   )
 }
