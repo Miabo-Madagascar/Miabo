@@ -57,20 +57,36 @@ def _get_assessment(db: DbSession, assessment_id: str, cp: CanopProfile) -> Asse
 
 
 def _to_dict(a: Assessment, db: DbSession | None = None) -> dict:
-    # Résolution du nom du jeune concerné via la table external_young_profiles
-    external_name: str | None = None
+    # Résolution des infos du jeune externe via la table external_young_profiles
+    ey_name: str | None = None
+    ey_dob:  str | None = None
+    ey_gender:  str | None = None
+    ey_region:  str | None = None
+    ey_quartier: str | None = None
+    ey_school:  str | None = None
     if a.external_young_id and db:
         ey = db.query(ExternalYoungProfile).filter(
             ExternalYoungProfile.id == a.external_young_id
         ).first()
-        external_name = ey.full_name if ey else None
+        if ey:
+            ey_name    = ey.full_name
+            ey_dob     = ey.date_of_birth.isoformat() if ey.date_of_birth else None
+            ey_gender  = ey.gender
+            ey_region  = ey.region
+            ey_quartier = ey.quartier
+            ey_school  = ey.school_name
 
     return {
-        "id":                       str(a.id),
-        "administered_by":          str(a.administered_by),
-        "student_profile_id":       str(a.student_profile_id) if a.student_profile_id else None,
-        "external_young_id":        str(a.external_young_id)  if a.external_young_id  else None,
-        "external_young_full_name": external_name,
+        "id":                          str(a.id),
+        "administered_by":             str(a.administered_by),
+        "student_profile_id":          str(a.student_profile_id) if a.student_profile_id else None,
+        "external_young_id":           str(a.external_young_id)  if a.external_young_id  else None,
+        "external_young_full_name":    ey_name,
+        "external_young_date_of_birth": ey_dob,
+        "external_young_gender":       ey_gender,
+        "external_young_region":       ey_region,
+        "external_young_quartier":     ey_quartier,
+        "external_young_school_name":  ey_school,
         "serie":                    a.serie,
         "career_interest":          a.career_interest,
         "vak_v_score":              a.vak_v_score,
@@ -118,15 +134,18 @@ def create_assessment(db: DbSession, user: Profile, data: CreateAssessmentReques
         if data.external_young_id and data.external_young_id != "pending":
             external_id = uuid.UUID(data.external_young_id)
         else:
-            # Création automatique du profil jeune externe
+            # Création automatique du profil jeune externe avec les champs CDC §6
             from datetime import date
+            dob = date.fromisoformat(data.date_of_birth) if data.date_of_birth else date(2010, 1, 1)
             ey = ExternalYoungProfile(
                 id=uuid.uuid4(),
                 created_by=cp.id,
                 full_name=data.external_young_full_name or "Jeune Externe",
-                date_of_birth=date(2010, 1, 1),
-                gender="autre",
-                region="Analamanga"
+                date_of_birth=dob,
+                gender=data.gender or "autre",
+                region=data.region or "Analamanga",
+                quartier=data.quartier or None,
+                school_name=data.school_name or None,
             )
             db.add(ey)
             db.flush()

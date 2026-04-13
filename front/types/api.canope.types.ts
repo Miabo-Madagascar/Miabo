@@ -38,6 +38,11 @@ export interface UpdateCanopProfileRequest {
 /** POST /api/v1/assessments */
 export interface CreateAssessmentRequest {
   external_young_full_name: string
+  date_of_birth?:           string          // YYYY-MM-DD
+  gender?:                  "M" | "F" | "autre"
+  region?:                  string
+  quartier?:                string
+  school_name?:             string
   serie?:                   "A1" | "A2" | "S" | "OSE" | "C" | "D" | "L"
   career_interest?:         string
 }

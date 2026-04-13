@@ -99,9 +99,9 @@ export function CanopeDashboardRecentBilans({ locale, basePath }: Props) {
                 {/* Action */}
                 <Link
                   href={`/${locale}/${basePath}/bilans/${a.id}`}
-                  className="w-16 rounded-lg bg-bg-muted px-3 py-1.5 text-center text-xs font-semibold text-text-primary transition-colors hover:bg-primary hover:text-white"
+                  className="w-20 rounded-lg bg-bg-muted px-3 py-1.5 text-center text-xs font-semibold text-text-primary transition-colors hover:bg-primary hover:text-white"
                 >
-                  Ouvrir
+                  Modifier
                 </Link>
               </div>
             )

@@ -124,7 +124,7 @@ export function AssessmentListClient({ locale, basePath }: AssessmentListClientP
                 href={`/${locale}/${basePath}/bilans/${a.id}`}
                 className="shrink-0 rounded-xl bg-bg-subtle px-5 py-2.5 text-xs font-bold text-text-primary transition-all group-hover:bg-primary group-hover:text-white"
               >
-                Ouvrir
+                Modifier
               </Link>
             </div>
           </div>
