@@ -6,6 +6,7 @@
  */
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
 import {
@@ -71,15 +72,17 @@ export function Sidebar({ locale, role }: SidebarProps) {
       ].join(" ")}
     >
       {/* ── Logo + bouton toggle ──────────────────────────────── */}
-      <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-3">
-        <Link href={`/${locale}`} className="flex items-center gap-2 overflow-hidden">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-white font-bold text-xl">
-            M
-          </div>
-          {!collapsed && (
-            <span className="whitespace-nowrap font-bold text-xl tracking-tight text-text-primary">
-              MIABO
-            </span>
+      <div className={[
+        "flex h-16 shrink-0 items-center border-b border-border",
+        collapsed ? "justify-center items-center" : "justify-between px-3",
+      ].join(" ")}>
+        <Link href={`/${locale}`} className="flex shrink-0 justify-center items-center overflow-hidden">
+          {collapsed ? (
+            /* Icône seule en mode réduit — taille généreuse pour remplir le rail */
+            <Image src="/miabo-icon.svg" alt="MIABO" width={36} height={36} className="h-9 w-9 shrink-0" />
+          ) : (
+            /* Logo complet en mode développé */
+            <Image src="/logo.png" alt="MIABO Madagascar" width={180} height={40} priority />
           )}
         </Link>
 
@@ -88,9 +91,9 @@ export function Sidebar({ locale, role }: SidebarProps) {
           type="button"
           onClick={toggle}
           title={collapsed ? "Développer" : "Réduire"}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-bg-subtle hover:text-text-primary"
+          className="flex h-3 w-3 shrink-0 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-bg-subtle hover:text-text-primary"
         >
-          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={18} />}
         </button>
       </div>
 

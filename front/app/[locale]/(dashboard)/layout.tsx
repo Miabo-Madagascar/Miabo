@@ -3,6 +3,7 @@
  * Injecte le Header avec bouton de déconnexion et la Sidebar commune.
  */
 
+import Image from "next/image"
 import { createClient } from "@/lib/supabase/server"
 import { Sidebar } from "@/components/dashboard/Sidebar"
 import { LogoutButton } from "@/components/auth/LogoutButton"
