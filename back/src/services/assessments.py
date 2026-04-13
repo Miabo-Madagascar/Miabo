@@ -56,26 +56,35 @@ def _get_assessment(db: DbSession, assessment_id: str, cp: CanopProfile) -> Asse
     return a
 
 
-def _to_dict(a: Assessment) -> dict:
+def _to_dict(a: Assessment, db: DbSession | None = None) -> dict:
+    # Résolution du nom du jeune concerné via la table external_young_profiles
+    external_name: str | None = None
+    if a.external_young_id and db:
+        ey = db.query(ExternalYoungProfile).filter(
+            ExternalYoungProfile.id == a.external_young_id
+        ).first()
+        external_name = ey.full_name if ey else None
+
     return {
-        "id":                 str(a.id),
-        "administered_by":    str(a.administered_by),
-        "student_profile_id": str(a.student_profile_id) if a.student_profile_id else None,
-        "external_young_id":  str(a.external_young_id)  if a.external_young_id  else None,
-        "serie":              a.serie,
-        "career_interest":    a.career_interest,
-        "vak_v_score":        a.vak_v_score,
-        "vak_a_score":        a.vak_a_score,
-        "vak_k_score":        a.vak_k_score,
-        "vak_dominant":       a.vak_dominant,
-        "riasec_scores":      a.riasec_scores,
-        "riasec_code":        a.riasec_code,
-        "disc_scores":        a.disc_scores,
-        "disc_dominant":      a.disc_dominant,
-        "actor_comment":      a.actor_comment,
-        "status":             a.status.value,
-        "created_at":         a.created_at.isoformat() if a.created_at else None,
-        "validated_at":       a.validated_at.isoformat() if a.validated_at else None,
+        "id":                       str(a.id),
+        "administered_by":          str(a.administered_by),
+        "student_profile_id":       str(a.student_profile_id) if a.student_profile_id else None,
+        "external_young_id":        str(a.external_young_id)  if a.external_young_id  else None,
+        "external_young_full_name": external_name,
+        "serie":                    a.serie,
+        "career_interest":          a.career_interest,
+        "vak_v_score":              a.vak_v_score,
+        "vak_a_score":              a.vak_a_score,
+        "vak_k_score":              a.vak_k_score,
+        "vak_dominant":             a.vak_dominant,
+        "riasec_scores":            a.riasec_scores,
+        "riasec_code":              a.riasec_code,
+        "disc_scores":              a.disc_scores,
+        "disc_dominant":            a.disc_dominant,
+        "actor_comment":            a.actor_comment,
+        "status":                   a.status.value,
+        "created_at":               a.created_at.isoformat() if a.created_at else None,
+        "validated_at":             a.validated_at.isoformat() if a.validated_at else None,
     }
 
 
@@ -87,7 +96,7 @@ def list_assessments(db: DbSession, user: Profile) -> list[dict]:
     rows = db.query(Assessment).filter(
         Assessment.administered_by == cp.id
     ).order_by(Assessment.created_at.desc()).all()
-    return [_to_dict(a) for a in rows]
+    return [_to_dict(a, db) for a in rows]
 
 
 def create_assessment(db: DbSession, user: Profile, data: CreateAssessmentRequest) -> dict:
@@ -135,7 +144,7 @@ def create_assessment(db: DbSession, user: Profile, data: CreateAssessmentReques
     db.add(a)
     db.commit()
     db.refresh(a)
-    return _to_dict(a)
+    return _to_dict(a, db)
 
 
 def submit_vak(db: DbSession, assessment_id: str, user: Profile, data: VakRequest) -> dict:
@@ -149,7 +158,7 @@ def submit_vak(db: DbSession, assessment_id: str, user: Profile, data: VakReques
     a.status       = AssessmentStatus.in_progress
     db.commit()
     db.refresh(a)
-    return _to_dict(a)
+    return _to_dict(a, db)
 
 
 def submit_riasec(db: DbSession, assessment_id: str, user: Profile, data: RiasecRequest) -> dict:
@@ -161,7 +170,7 @@ def submit_riasec(db: DbSession, assessment_id: str, user: Profile, data: Riasec
     a.riasec_code   = _riasec_code(scores)
     db.commit()
     db.refresh(a)
-    return _to_dict(a)
+    return _to_dict(a, db)
 
 
 def submit_disc(db: DbSession, assessment_id: str, user: Profile, data: DiscRequest) -> dict:
@@ -173,7 +182,7 @@ def submit_disc(db: DbSession, assessment_id: str, user: Profile, data: DiscRequ
     a.disc_dominant = _disc_dominant(scores)
     db.commit()
     db.refresh(a)
-    return _to_dict(a)
+    return _to_dict(a, db)
 
 
 def validate_assessment(
@@ -193,7 +202,7 @@ def validate_assessment(
     a.validated_at  = datetime.now(timezone.utc)
     db.commit()
     db.refresh(a)
-    return _to_dict(a)
+    return _to_dict(a, db)
 
 
 def get_assessment(db: DbSession, assessment_id: str, user: Profile) -> dict:

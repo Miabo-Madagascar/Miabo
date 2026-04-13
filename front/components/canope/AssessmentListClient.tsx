@@ -69,8 +69,9 @@ export function AssessmentListClient({ locale, basePath }: AssessmentListClientP
       {assessments.map((a) => {
         const cfg    = STATUS_LABEL[a.status as AssessmentStatus] ?? STATUS_LABEL[AssessmentStatus.Draft]
         const date   = new Date(a.created_at).toLocaleDateString("fr-MG", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute:"2-digit" })
-        const subject = a.student_profile_id ? "Élève MIABO" : "Jeune externe"
-        
+        // Nom du jeune — préfère le nom résolu, sinon fallback
+        const subject = a.external_young_full_name ?? (a.student_profile_id ? "Élève MIABO" : "Jeune externe")
+
         let completed = 0;
         if (a.vak_dominant) completed++;
         if (a.riasec_code) completed++;

@@ -69,6 +69,6 @@ class ExternalYoungProfile(Base):
     __table_args__ = (
         CheckConstraint("gender IN ('M', 'F', 'autre')",
                         name="chk_external_gender"),
-        CheckConstraint("serie IN ('L', 'S')",
+        CheckConstraint("serie IN ('A1', 'A2', 'S', 'OSE', 'C', 'D', 'L')",
                         name="chk_external_serie"),
     )

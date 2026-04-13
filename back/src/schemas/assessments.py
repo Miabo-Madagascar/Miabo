@@ -19,8 +19,9 @@ class CreateAssessmentRequest(BaseModel):
     @field_validator("serie")
     @classmethod
     def serie_valide(cls, v: str | None) -> str | None:
-        if v and v not in ("L", "S"):
-            raise ValueError("Série invalide : L ou S uniquement")
+        series_valides = ("A1", "A2", "S", "OSE", "C", "D", "L")
+        if v and v not in series_valides:
+            raise ValueError(f"Série invalide. Valeurs acceptées : {', '.join(series_valides)}")
         return v
 
 

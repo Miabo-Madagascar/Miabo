@@ -11,10 +11,9 @@ import type { Notification }  from "./db.messaging.types"
 
 /** POST /api/v1/assessments */
 export interface CreateAssessmentRequest {
-  student_profile_id?: string
-  external_young_id?:  string
-  serie?:              "L" | "S"
-  career_interest?:    string
+  external_young_full_name: string
+  serie?:                   "A1" | "A2" | "S" | "OSE" | "C" | "D" | "L"
+  career_interest?:         string
 }
 
 export interface SubmitVakRequest {
