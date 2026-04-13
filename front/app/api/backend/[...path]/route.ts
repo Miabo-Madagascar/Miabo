@@ -69,7 +69,12 @@ async function handler(
 
     const responseHeaders = new Headers(backendResponse.headers)
     responseHeaders.delete("transfer-encoding")
+    // fetch() décompresse automatiquement le body gzip/br — supprimer ces headers
+    // pour que le client ne tente pas de décompresser une seconde fois.
     responseHeaders.delete("content-encoding")
+    // content-length du backend reflète la taille compressée ; après décompression
+    // par fetch() le body est plus grand → supprimer pour éviter la troncature côté client.
+    responseHeaders.delete("content-length")
 
     // Si on détecte un flux (SSE ou autre), on retourne directement le ReadableStream
     // sans attendre sa résolution (ce qui bloquerait la requête à l'infini).
