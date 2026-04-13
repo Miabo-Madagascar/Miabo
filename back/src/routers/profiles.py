@@ -5,7 +5,7 @@ Préfixe : /api/v1/profiles
 
 from fastapi import APIRouter, HTTPException, status
 from src.dependencies import DbDep, CurrentUser
-from src.schemas.auth import UpdateProfileRequest, UpdateTutorProfileRequest
+from src.schemas.auth import UpdateProfileRequest, UpdateTutorProfileRequest, UpdateCanopProfileRequest
 from src.services import profiles as profiles_svc
 
 router = APIRouter(prefix="/profiles", tags=["Profils"])
@@ -58,6 +58,16 @@ async def update_my_tutor_profile(
         teaching_methods=body.teaching_methods,
         location=body.location,
     )
+
+
+@router.put("/me/canope")
+async def update_my_canop_profile(
+    body:         UpdateCanopProfileRequest,
+    current_user: CurrentUser,
+    db:           DbDep,
+):
+    """Met à jour le sous-profil CANOPE/COSP (identité, adresse, profil, formation)."""
+    return profiles_svc.update_canope_profile(db, current_user, body)
 
 
 @router.get("/{user_id}")

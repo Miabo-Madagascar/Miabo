@@ -75,6 +75,7 @@ export interface FullProfile {
   created_at:         string | null
   student_profile:    StudentProfile | null
   tutor_profile:      TutorProfile | null
+  canop_profile:      CanopProfile | null
 }
 
 // ── Messagerie enrichie ────────────────────────────────────────────────────

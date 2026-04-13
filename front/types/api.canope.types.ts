@@ -19,6 +19,22 @@ export interface AssessmentStats {
   completion_rate: number   // pourcentage 0-100
 }
 
+/** PUT /api/v1/profiles/me/canope */
+export interface UpdateCanopProfileRequest {
+  first_name?:          string
+  last_name?:           string
+  date_of_birth?:       string   // YYYY-MM-DD
+  gender?:              "M" | "F" | "autre"
+  address?:             string
+  city?:                string
+  region?:              string
+  profession?:          string
+  profile_type?:        "etudiant" | "tuteur" | "parent" | "autre"
+  profile_other?:       string
+  education_level?:     string
+  cosp_training_dates?: string[] // YYYY-MM-DD[]
+}
+
 /** POST /api/v1/assessments */
 export interface CreateAssessmentRequest {
   external_young_full_name: string
