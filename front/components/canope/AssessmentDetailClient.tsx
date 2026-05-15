@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from "react"
+import Image from "next/image"
 import { api, ApiError } from "@/lib/api/client"
 import { Badge } from "@/components/ui/Badge"
 import { Button } from "@/components/ui/Button"
@@ -40,12 +41,12 @@ export function AssessmentDetailClient({ assessmentId, locale, basePath }: Asses
 
   useEffect(() => { load() }, [assessmentId])
 
-  const handleSaveVak = async (scores: { v: number, a: number, k: number }) => {
+  const handleSaveVak = async (scores: Record<string, number>) => {
     try {
       await api.put(`/assessments/${assessmentId}/vak`, {
-        v_score: scores.v,
-        a_score: scores.a,
-        k_score: scores.k,
+        v_score: scores["V"] ?? 0,
+        a_score: scores["A"] ?? 0,
+        k_score: scores["K"] ?? 0,
       })
       setTestType(null)
       load()
@@ -120,6 +121,16 @@ export function AssessmentDetailClient({ assessmentId, locale, basePath }: Asses
             </span>
           </div>
         </div>
+
+        {/* ── Logo SESAME — placer l'image dans public/logos/sesame.png ── */}
+        <Image
+          src="/logos/sesame.png"
+          alt="Programme SESAME"
+          width={120}
+          height={48}
+          className="object-contain"
+          priority
+        />
       </div>
 
       {/* ── Tests Grid ─────────────────────────────────────────── */}

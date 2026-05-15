@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
+import { PasswordInput } from "@/components/ui/PasswordInput"
 
 interface LoginFormProps {
   locale: string
@@ -56,9 +57,8 @@ export function LoginForm({ locale }: LoginFormProps) {
         placeholder="votre@email.com"
       />
 
-      <Input
+      <PasswordInput
         label="Mot de passe"
-        type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         required
