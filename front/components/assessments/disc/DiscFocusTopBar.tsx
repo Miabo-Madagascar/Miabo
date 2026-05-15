@@ -1,10 +1,9 @@
-import { DISC_PROFILES } from "../data/discProfiles"
-import type { DiscQuestion } from "../data/discQuestions"
+import type { DiscChoiceQuestion } from "../data/discQuestions"
 
 interface Props {
   i:          number
-  questions:  DiscQuestion[]
-  answers:    Record<number, number>
+  questions:  DiscChoiceQuestion[]
+  answers:    Record<number, string>
   onNavigate: (idx: number) => void
   onExit:     () => void
 }
@@ -29,15 +28,14 @@ export function DiscFocusTopBar({ i, questions, answers, onNavigate, onExit }: P
       {/* Tirets de progression cliquables */}
       <div className="flex items-center gap-1">
         {questions.map((qq, idx) => {
-          const p   = DISC_PROFILES[qq.type]
-          const ans = answers[qq.id] != null
+          const answered = answers[qq.id] != null
           return (
             <button key={qq.id} onClick={() => onNavigate(idx)}
-              className="group flex-1 py-2" title={`Question ${idx + 1} · ${p.name}`}>
+              className="group flex-1 py-2" title={`Question ${idx + 1}`}>
               <span className="block h-1 w-full rounded-full transition-all"
                 style={{
-                  background: ans ? p.tone : idx === i ? p.tone : idx < i ? "#cbd5e1" : "#e2e8f0",
-                  opacity:    ans ? 1 : idx === i ? 0.45 : 1,
+                  background: answered ? "var(--color-primary-500)" : idx === i ? "var(--color-primary-500)" : "#e2e8f0",
+                  opacity:    answered ? 1 : idx === i ? 0.45 : 1,
                 }} />
             </button>
           )
