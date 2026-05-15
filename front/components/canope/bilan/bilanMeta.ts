@@ -15,7 +15,7 @@ export const TESTS_META: Record<"vak" | "riasec" | "disc", TestMeta> = {
     id: "vak",
     title: "Profil VAK", subtitle: "Styles d'apprentissage",
     abstract: "Découvrez comment vous mémorisez et apprenez le mieux : par l'image, l'écoute ou le mouvement.",
-    module: "Module 1 / 3", duration: "4 min", questions: 12,
+    module: "Module 1 / 3", duration: "6 min", questions: 30,
     profiles: [
       { letter: "V", name: "Visuel",        tone: "#7c3aed" },
       { letter: "A", name: "Auditif",       tone: "#0891b2" },
@@ -26,7 +26,7 @@ export const TESTS_META: Record<"vak" | "riasec" | "disc", TestMeta> = {
     id: "riasec",
     title: "Test RIASEC", subtitle: "Intérêts professionnels",
     abstract: "Identifiez parmi six grands profils ceux qui correspondent à vos centres d'intérêt et environnements de travail préférés.",
-    module: "Module 2 / 3", duration: "5 min", questions: 12,
+    module: "Module 2 / 3", duration: "10 min", questions: 66,
     profiles: [
       { letter: "R", name: "Réaliste",      tone: "#a16207" },
       { letter: "I", name: "Investigateur", tone: "#1e40af" },
@@ -40,7 +40,7 @@ export const TESTS_META: Record<"vak" | "riasec" | "disc", TestMeta> = {
     id: "disc",
     title: "Test DISC", subtitle: "Profil comportemental",
     abstract: "Comprenez votre manière de communiquer, de décider et d'interagir en groupe parmi quatre styles dominants.",
-    module: "Module 3 / 3", duration: "5 min", questions: 16,
+    module: "Module 3 / 3", duration: "5 min", questions: 25,
     profiles: [
       { letter: "D", name: "Dominance",  tone: "#dc2626" },
       { letter: "I", name: "Influence",  tone: "#d97706" },
