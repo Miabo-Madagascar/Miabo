@@ -44,6 +44,22 @@ class UpdateProfileRequest(BaseModel):
     locale:     str | None = None
 
 
+class UpdateCanopProfileRequest(BaseModel):
+    """Mise à jour du sous-profil CANOPE/COSP — tous les champs sont optionnels."""
+    first_name:          str | None       = None
+    last_name:           str | None       = None
+    date_of_birth:       str | None       = None   # ISO YYYY-MM-DD
+    gender:              str | None       = None   # M | F | autre
+    address:             str | None       = None
+    city:                str | None       = None
+    region:              str | None       = None
+    profession:          str | None       = None
+    profile_type:        str | None       = None   # etudiant | tuteur | parent | autre
+    profile_other:       str | None       = None   # précision si profile_type = 'autre'
+    education_level:     str | None       = None
+    cosp_training_dates: list[str] | None = None   # ISO YYYY-MM-DD (COSP uniquement)
+
+
 class UpdateTutorProfileRequest(BaseModel):
     """Mise à jour du sous-profil tuteur — tous les champs sont optionnels."""
     bio:              str | None       = None

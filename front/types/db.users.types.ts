@@ -58,6 +58,9 @@ export interface TutorProfile {
   updated_at:        string
 }
 
+/** Type de profil CANOPE/COSP dans le système éducatif */
+export type CanopProfileType = "etudiant" | "tuteur" | "parent" | "autre"
+
 /** Données acteurs CANOPE et COSP — identifiés par code SESAME */
 export interface CanopProfile {
   id:                  string
@@ -67,10 +70,13 @@ export interface CanopProfile {
   last_name:           string
   date_of_birth:       string
   gender:              "M" | "F" | "autre"
+  address:             string | null     // Adresse postale
   city:                string
   region:              string
   phone:               string
   profession:          string
+  profile_type:        CanopProfileType | null  // Étudiant / Tuteur / Parent / Autre
+  profile_other:       string | null            // Précision si profile_type = 'autre'
   education_level:     string | null
   cosp_training_dates: string[]
   is_cosp:             boolean

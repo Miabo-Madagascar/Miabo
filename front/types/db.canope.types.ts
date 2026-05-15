@@ -18,12 +18,17 @@ export interface DiscScores {
 
 /** Bilan d'orientation VAK/RIASEC/DISC administré par CANOPE/COSP */
 export interface Assessment {
-  id:                       string
-  administered_by:          string
-  student_profile_id:       string | null   // Option A : élève MIABO (non utilisé en UI v2)
-  external_young_id:        string | null   // Option B : jeune externe
-  external_young_full_name: string | null   // Nom résolu du jeune externe
-  serie:                    "A1" | "A2" | "S" | "OSE" | "C" | "D" | "L" | null
+  id:                              string
+  administered_by:                 string
+  student_profile_id:              string | null   // Option A : élève MIABO
+  external_young_id:               string | null   // Option B : jeune externe
+  external_young_full_name:        string | null   // Nom résolu du jeune
+  external_young_date_of_birth:    string | null   // Date de naissance (YYYY-MM-DD)
+  external_young_gender:           "M" | "F" | "autre" | null
+  external_young_region:           string | null
+  external_young_quartier:         string | null
+  external_young_school_name:      string | null
+  serie:                           "A1" | "A2" | "S" | "OSE" | "C" | "D" | "L" | null
   career_interest:    string | null
   vak_v_score:        number | null   // 0-10
   vak_a_score:        number | null   // 0-9

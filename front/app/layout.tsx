@@ -20,6 +20,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title:       "MIABO — Tutorat Madagascar",
   description: "Plateforme de tutorat scolaire pour Madagascar",
+  icons: {
+    icon:  "/miabo-icon.svg",
+    apple: "/miabo-icon.svg",
+  },
 }
 
 export default function RootLayout({

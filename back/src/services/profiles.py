@@ -8,6 +8,7 @@ from sqlalchemy.dialects.postgresql import ARRAY, TEXT
 
 from src.models.users import Profile
 from src.models.profiles import StudentProfile, TutorProfile
+from src.models.canope_users import CanopProfile
 
 
 def get_full_profile(db: Session, profile: Profile) -> dict:
@@ -26,6 +27,7 @@ def get_full_profile(db: Session, profile: Profile) -> dict:
         "created_at":         profile.created_at.isoformat() if profile.created_at else None,
         "student_profile":    None,
         "tutor_profile":      None,
+        "canop_profile":      None,
     }
 
     if profile.role.value == "student":
@@ -41,6 +43,13 @@ def get_full_profile(db: Session, profile: Profile) -> dict:
         ).first()
         if tp:
             data["tutor_profile"] = _tutor_profile_to_dict(tp)
+
+    elif profile.role.value in ("canope", "cosp"):
+        cp = db.query(CanopProfile).filter(
+            CanopProfile.profile_id == profile.id
+        ).first()
+        if cp:
+            data["canop_profile"] = _canop_profile_to_dict(cp)
 
     return data
 
@@ -210,6 +219,64 @@ def update_tutor_profile(
     if location         is not None: tp.location         = location
     db.commit()
     db.refresh(tp)
+    return get_full_profile(db, profile)
+
+
+def _canop_profile_to_dict(cp: CanopProfile) -> dict:
+    return {
+        "id":                  str(cp.id),
+        "sesame_code":         cp.sesame_code,
+        "first_name":          cp.first_name,
+        "last_name":           cp.last_name,
+        "date_of_birth":       cp.date_of_birth.isoformat() if cp.date_of_birth else None,
+        "gender":              cp.gender,
+        "address":             cp.address,
+        "city":                cp.city,
+        "region":              cp.region,
+        "phone":               cp.phone,
+        "profession":          cp.profession,
+        "profile_type":        cp.profile_type,
+        "profile_other":       cp.profile_other,
+        "education_level":     cp.education_level,
+        "cosp_training_dates": [d.isoformat() for d in (cp.cosp_training_dates or [])],
+        "is_cosp":             cp.is_cosp,
+    }
+
+
+def update_canope_profile(
+    db:      Session,
+    profile: Profile,
+    data:    "UpdateCanopProfileRequest",
+) -> dict:
+    """Met à jour le sous-profil CANOPE/COSP."""
+    from fastapi import HTTPException, status as http_status
+    from src.schemas.auth import UpdateCanopProfileRequest
+    from datetime import date
+
+    cp = db.query(CanopProfile).filter(CanopProfile.profile_id == profile.id).first()
+    if not cp:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail="Profil CANOPE/COSP introuvable",
+        )
+
+    if data.first_name      is not None: cp.first_name      = data.first_name
+    if data.last_name       is not None: cp.last_name       = data.last_name
+    if data.date_of_birth   is not None:
+        cp.date_of_birth = date.fromisoformat(data.date_of_birth)
+    if data.gender          is not None: cp.gender          = data.gender
+    if data.address         is not None: cp.address         = data.address
+    if data.city            is not None: cp.city            = data.city
+    if data.region          is not None: cp.region          = data.region
+    if data.profession      is not None: cp.profession      = data.profession
+    if data.profile_type    is not None: cp.profile_type    = data.profile_type
+    if data.profile_other   is not None: cp.profile_other   = data.profile_other
+    if data.education_level is not None: cp.education_level = data.education_level
+    if data.cosp_training_dates is not None and cp.is_cosp:
+        cp.cosp_training_dates = [date.fromisoformat(d) for d in data.cosp_training_dates]
+
+    db.commit()
+    db.refresh(cp)
     return get_full_profile(db, profile)
 
 
