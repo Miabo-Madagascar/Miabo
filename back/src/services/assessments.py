@@ -12,7 +12,7 @@ from src.models.canope_users import CanopProfile, ExternalYoungProfile
 from src.models.users import Profile
 from src.models.enums import AssessmentStatus
 from src.schemas.assessments import (
-    CreateAssessmentRequest, VakRequest, RiasecRequest,
+    CreateAssessmentRequest, VakRequest, RiasecRequest, RiasecCodeRequest,
     DiscRequest, ValidateAssessmentRequest,
 )
 
@@ -25,9 +25,9 @@ def _vak_dominant(v: int, a: int, k: int) -> str:
 
 
 def _riasec_code(scores: dict) -> str:
-    """Code 2 lettres = les 2 dimensions RIASEC avec les scores les plus hauts."""
-    top2 = sorted(scores, key=scores.get, reverse=True)[:2]
-    return "".join(top2)
+    """Code de Holland : 3 lettres = les 3 dimensions RIASEC avec les scores les plus hauts."""
+    top3 = sorted(scores, key=scores.get, reverse=True)[:3]
+    return "".join(top3)
 
 
 def _disc_dominant(scores: dict) -> str:
@@ -181,12 +181,24 @@ def submit_vak(db: DbSession, assessment_id: str, user: Profile, data: VakReques
 
 
 def submit_riasec(db: DbSession, assessment_id: str, user: Profile, data: RiasecRequest) -> dict:
-    """Enregistre les scores RIASEC et calcule le code 2 lettres."""
+    """Enregistre les scores RIASEC et calcule le code de Holland (3 lettres)."""
     cp     = _get_canope_profile(db, user)
     a      = _get_assessment(db, assessment_id, cp)
     scores = {"R": data.R, "I": data.I, "A": data.A, "S": data.S, "E": data.E, "C": data.C}
     a.riasec_scores = scores
     a.riasec_code   = _riasec_code(scores)
+    db.commit()
+    db.refresh(a)
+    return _to_dict(a, db)
+
+
+def update_riasec_code(db: DbSession, assessment_id: str, user: Profile, data: RiasecCodeRequest) -> dict:
+    """Sauvegarde le code de Holland choisi manuellement après résolution d'ex-aequo."""
+    cp = _get_canope_profile(db, user)
+    a  = _get_assessment(db, assessment_id, cp)
+    if not a.riasec_scores:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Le test RIASEC n'a pas encore été soumis.")
+    a.riasec_code = data.code
     db.commit()
     db.refresh(a)
     return _to_dict(a, db)

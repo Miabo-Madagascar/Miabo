@@ -6,7 +6,7 @@ Préfixe : /api/v1/assessments
 from fastapi import APIRouter
 from src.dependencies import DbDep, CurrentUser
 from src.schemas.assessments import (
-    CreateAssessmentRequest, VakRequest, RiasecRequest,
+    CreateAssessmentRequest, VakRequest, RiasecRequest, RiasecCodeRequest,
     DiscRequest, ValidateAssessmentRequest,
 )
 from src.services import assessments as svc
@@ -52,8 +52,16 @@ async def submit_vak(
 async def submit_riasec(
     assessment_id: str, body: RiasecRequest, current_user: CurrentUser, db: DbDep,
 ):
-    """Enregistre les scores RIASEC et calcule le code 2 lettres."""
+    """Enregistre les scores RIASEC et calcule le code de Holland (3 lettres)."""
     return svc.submit_riasec(db, assessment_id, current_user, body)
+
+
+@router.put("/{assessment_id}/riasec-code")
+async def update_riasec_code(
+    assessment_id: str, body: RiasecCodeRequest, current_user: CurrentUser, db: DbDep,
+):
+    """Met à jour le code de Holland choisi manuellement après résolution d'ex-aequo."""
+    return svc.update_riasec_code(db, assessment_id, current_user, body)
 
 
 @router.put("/{assessment_id}/disc")

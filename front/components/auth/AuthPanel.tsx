@@ -97,6 +97,22 @@ export default function AuthPanel() {
             />
           ))}
         </div>
+
+        {/* Badge partenariat SESAME */}
+        <div className="flex items-center gap-3 pt-2 border-t border-white/15">
+          <span className="text-white/40 text-[10px] font-bold uppercase tracking-[.18em] shrink-0">
+            En partenariat avec
+          </span>
+          <div className="bg-white rounded-xl px-5 py-3 shadow-md">
+            <Image
+              src="/logos/sesame.png"
+              alt="Programme SESAME"
+              width={130}
+              height={48}
+              className="h-11 w-auto object-contain"
+            />
+          </div>
+        </div>
       </div>
     </div>
   )

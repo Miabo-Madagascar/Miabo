@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
+import { PasswordInput } from "@/components/ui/PasswordInput"
 import { RoleSelector } from "@/components/auth/RoleSelector"
 import { UserRole } from "@/types"
 
@@ -99,9 +100,8 @@ export function RegisterForm({ locale }: RegisterFormProps) {
         autoComplete="email"
         placeholder="votre@email.com"
       />
-      <Input
+      <PasswordInput
         label="Mot de passe"
-        type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         required

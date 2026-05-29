@@ -72,6 +72,30 @@ export default async function HomePage({ params }: HomePageProps) {
       {/* ── HERO SECTION ────────────────────────────────────────────────── */}
       <HeroCarousel locale={locale} />
 
+      {/* ── PARTENARIAT SESAME ──────────────────────────────────────────── */}
+      <section className="py-10 px-10 bg-[#1e1b4b]">
+        <div className="container mx-auto flex flex-col sm:flex-row items-center justify-center gap-8">
+          <span className="text-white/50 text-[11px] font-bold uppercase tracking-[.22em] shrink-0">
+            En partenariat avec
+          </span>
+          <div className="h-px w-12 bg-white/20 hidden sm:block" />
+          <div className="bg-white rounded-2xl px-7 py-4 shadow-lg">
+            <Image
+              src="/logos/sesame.png"
+              alt="Programme SESAME"
+              width={200}
+              height={72}
+              className="h-16 w-auto object-contain"
+            />
+          </div>
+          <div className="h-10 w-px bg-white/20 hidden sm:block" />
+          <p className="text-white/60 text-[13px] font-medium leading-relaxed text-center sm:text-left max-w-sm">
+            Programme national d&apos;orientation scolaire et professionnelle
+            pour les jeunes de Madagascar.
+          </p>
+        </div>
+      </section>
+
       {/* ── START YOUR JOURNEY (White section from Capture 00-58-15) ───── */}
       <section className="py-24 px-10 bg-white text-[#1e1b4b]">
         <div className="container mx-auto">
