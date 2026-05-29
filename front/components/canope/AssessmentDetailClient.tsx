@@ -5,14 +5,16 @@ import Link from "next/link"
 import { api, ApiError } from "@/lib/api/client"
 import type { Assessment } from "@/types"
 import { AssessmentStatus } from "@/types"
-import { VakTest }          from "../assessments/VakTest"
-import { RiasecTest }       from "../assessments/RiasecTest"
-import { DiscTest }         from "../assessments/DiscTest"
-import { BilanHeader }      from "./bilan/BilanHeader"
-import { BilanTestCard }    from "./bilan/BilanTestCard"
-import { BilanAside }       from "./bilan/BilanAside"
-import { BilanSynthesis }   from "./bilan/BilanSynthesis"
-import { TESTS_META }       from "./bilan/bilanMeta"
+import { VakTest }    from "../assessments/VakTest"
+import { RiasecTest } from "../assessments/RiasecTest"
+import { DiscTest }   from "../assessments/DiscTest"
+import { BilanHeader }     from "./bilan/BilanHeader"
+import { BilanTestCard }   from "./bilan/BilanTestCard"
+import { BilanAside }      from "./bilan/BilanAside"
+import { BilanSynthesis }  from "./bilan/BilanSynthesis"
+import { TESTS_META }      from "./bilan/bilanMeta"
+import { AssessmentResultsView } from "./AssessmentResultsView"
+import type { ResultViewType }   from "./AssessmentResultsView"
 
 interface Props { assessmentId: string; locale: string; basePath: string }
 
@@ -21,6 +23,7 @@ export function AssessmentDetailClient({ assessmentId, locale }: Props) {
   const [isLoading,  setIsLoading]  = useState(true)
   const [error,      setError]      = useState<string | null>(null)
   const [testType,   setTestType]   = useState<"vak" | "riasec" | "disc" | null>(null)
+  const [viewType,   setViewType]   = useState<ResultViewType | null>(null)
   const [comment,    setComment]    = useState("")
   const [validating, setValidating] = useState(false)
 
@@ -34,6 +37,10 @@ export function AssessmentDetailClient({ assessmentId, locale }: Props) {
 
   useEffect(() => { load() }, [assessmentId])
 
+  /* Ferme le test, rafraîchit l'assessment (appelé par onCancel ou onBack depuis résultats) */
+  const closeTest = () => { setTestType(null); setViewType(null); load() }
+
+  /* Sauvegarde les scores — ne ferme PAS le test (VakTest affichera ses résultats) */
   const handleSave = (key: "vak" | "riasec" | "disc") => async (scores: Record<string, number>) => {
     try {
       if (key === "vak") {
@@ -43,9 +50,15 @@ export function AssessmentDetailClient({ assessmentId, locale }: Props) {
       } else {
         await api.put(`/assessments/${assessmentId}/${key}`, scores)
       }
-      setTestType(null)
-      load()
     } catch (err: any) { alert(err.detail || "Erreur lors de la sauvegarde") }
+  }
+
+  /* Sauvegarde le code RIASEC choisi manuellement après résolution d'ex-aequo */
+  const handleCodeUpdate = async (code: string) => {
+    try {
+      await api.put(`/assessments/${assessmentId}/riasec-code`, { code })
+      load()
+    } catch (err: any) { alert(err.detail || "Erreur lors de la sauvegarde du code") }
   }
 
   const handleValidate = async () => {
@@ -62,12 +75,34 @@ export function AssessmentDetailClient({ assessmentId, locale }: Props) {
     <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error ?? "Bilan introuvable"}</p>
   )
 
-  if (testType === "vak")    return <VakTest    onCancel={() => setTestType(null)} onSave={handleSave("vak")}/>
-  if (testType === "riasec") return <RiasecTest onCancel={() => setTestType(null)} onSave={handleSave("riasec")}/>
-  if (testType === "disc")   return <DiscTest   onCancel={() => setTestType(null)} onSave={handleSave("disc")}/>
+  /* Affichage des résultats depuis les scores sauvegardés */
+  if (viewType) {
+    return <AssessmentResultsView assessment={assessment} viewType={viewType}
+      onCodeUpdate={handleCodeUpdate}
+      onRetake={() => { setViewType(null); setTestType(viewType) }}
+      onBack={closeTest} />
+  }
 
-  const isLocked       = assessment.status === AssessmentStatus.Validated
-  const dominants      = { vak: assessment.vak_dominant, riasec: assessment.riasec_code, disc: assessment.disc_dominant }
+  /* Passage des tests */
+  if (testType === "vak")    return <VakTest    onCancel={closeTest} onSave={handleSave("vak")}/>
+  if (testType === "riasec") return <RiasecTest onCancel={closeTest} onSave={handleSave("riasec")} onCodeUpdate={handleCodeUpdate}/>
+  if (testType === "disc")   return <DiscTest   onCancel={closeTest} onSave={handleSave("disc")}/>
+
+  const isLocked = assessment.status === AssessmentStatus.Validated
+
+  /* Utilise le code sauvegardé (ordre choisi par l'user) ;
+     recalcule depuis les scores uniquement si le code est absent ou encore à 2 lettres (données pré-migration) */
+  const riasecCode = (assessment.riasec_code && assessment.riasec_code.length >= 3)
+    ? assessment.riasec_code
+    : assessment.riasec_scores
+      ? Object.entries(assessment.riasec_scores)
+          .sort(([, a], [, b]) => b - a)
+          .slice(0, 3)
+          .map(([k]) => k)
+          .join("")
+      : assessment.riasec_code
+
+  const dominants = { vak: assessment.vak_dominant, riasec: riasecCode, disc: assessment.disc_dominant }
   const completedCount = Object.values(dominants).filter(Boolean).length
   const allCompleted   = completedCount === 3
 
@@ -103,7 +138,8 @@ export function AssessmentDetailClient({ assessmentId, locale }: Props) {
           {(["vak", "riasec", "disc"] as const).map(key => (
             <BilanTestCard key={key} test={TESTS_META[key]}
               dominant={dominants[key]} locked={isLocked}
-              onStart={() => setTestType(key)}/>
+              onStart={() => setTestType(key)}
+              onView={dominants[key] ? () => setViewType(key) : undefined}/>
           ))}
         </div>
       </section>
@@ -112,7 +148,7 @@ export function AssessmentDetailClient({ assessmentId, locale }: Props) {
         <BilanSynthesis
           locked={isLocked} canValidate={allCompleted} validating={validating}
           comment={comment} actorComment={assessment.actor_comment}
-          validatedAt={assessment.validated_at}
+          validatedAt={assessment.validated_at} assessmentId={assessmentId}
           onCommentChange={setComment} onValidate={handleValidate}/>
         <BilanAside assessment={assessment}/>
       </section>

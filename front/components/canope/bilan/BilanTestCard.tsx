@@ -6,11 +6,18 @@ interface Props {
   dominant: string | null
   locked:   boolean
   onStart:  () => void
+  onView?:  () => void   // Voir les résultats sans refaire le test
 }
 
-export function BilanTestCard({ test, dominant, locked, onStart }: Props) {
-  const completed       = dominant != null
-  const dominantProfile = completed ? test.profiles.find(p => p.letter === dominant[0]) : null
+export function BilanTestCard({ test, dominant, locked, onStart, onView }: Props) {
+  const completed = dominant != null
+
+  /* Pour RIASEC : on décompose le code en 3 lettres (ex: "RES" → ["R","E","S"]) */
+  const isRiasec        = test.id === "riasec"
+  const dominantLetters = completed && isRiasec ? dominant.split("") : (completed ? [dominant[0]] : [])
+  const dominantProfiles = dominantLetters
+    .map(l => test.profiles.find(p => p.letter === l))
+    .filter(Boolean) as typeof test.profiles
 
   return (
     <article className={`group relative flex flex-col overflow-hidden rounded-3xl border bg-white transition-all duration-300 ${
@@ -65,20 +72,36 @@ export function BilanTestCard({ test, dominant, locked, onStart }: Props) {
         )}
 
         {/* Résultat si terminé */}
-        {completed && dominantProfile && (
-          <div className="mt-1 flex items-center rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-            <div>
-              <div className="text-[10px] font-bold uppercase tracking-[.14em] text-slate-500">Profil dominant</div>
-              <div className="mt-0.5 flex items-center gap-2">
-                <span className="flex h-7 min-w-[28px] px-1 items-center justify-center rounded-lg text-[12px] font-bold text-white"
-                  style={{ background: dominantProfile.tone }}>
-                  {dominant}
-                </span>
-                <span className="font-display text-[18px] font-bold tracking-tight text-slate-900">
-                  {dominantProfile.name}
+        {completed && dominantProfiles.length > 0 && (
+          <div className="mt-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <div className="text-[10px] font-bold uppercase tracking-[.14em] text-slate-500 mb-2">
+              {isRiasec ? "Code de Holland" : "Profil dominant"}
+            </div>
+
+            {isRiasec ? (
+              /* Code de Holland : badges en ligne + code texte */
+              <div className="flex items-center gap-2">
+                {dominantProfiles.map(p => (
+                  <span key={p.letter}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-[13px] font-bold text-white shadow-sm"
+                    style={{ background: p.tone }}>
+                    {p.letter}
+                  </span>
+                ))}
+                <span className="ml-1 font-display text-[18px] font-bold tracking-tight text-slate-700">
+                  {dominantProfiles.map(p => p.letter).join("")}
                 </span>
               </div>
-            </div>
+            ) : (
+              /* Profil unique VAK / DISC */
+              <div className="flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-md text-[11px] font-bold text-white shrink-0"
+                  style={{ background: dominantProfiles[0].tone }}>
+                  {dominantProfiles[0].letter}
+                </span>
+                <span className="font-semibold text-[14px] text-slate-800">{dominantProfiles[0].name}</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -86,9 +109,9 @@ export function BilanTestCard({ test, dominant, locked, onStart }: Props) {
         <div className="mt-auto pt-2 flex items-center gap-2">
           {completed ? (
             <>
-              <button onClick={onStart}
+              <button onClick={onView ?? onStart}
                 className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-50 transition">
-                Voir le détail
+                Voir les résultats
               </button>
               {!locked && (
                 <button onClick={onStart} title="Refaire le test"

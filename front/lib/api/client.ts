@@ -98,4 +98,15 @@ export const api = {
   /** DELETE authentifié */
   delete: <T>(path: string) =>
     request<T>(path, { method: "DELETE" }),
+
+  /**
+   * POST authentifié qui retourne la Response brute (streaming SSE).
+   * À utiliser quand le corps de la réponse doit être lu progressivement.
+   */
+  postStream: async (path: string): Promise<Response> => {
+    const token = await getToken()
+    const headers: Record<string, string> = { "Content-Type": "application/json" }
+    if (token) headers["Authorization"] = `Bearer ${token}`
+    return fetch(`${API_BASE}${path}`, { method: "POST", headers })
+  },
 }
