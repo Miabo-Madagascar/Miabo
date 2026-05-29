@@ -1,3 +1,7 @@
+"use client"
+
+import { BilanAiSuggestion } from "./BilanAiSuggestion"
+
 interface Props {
   locked:          boolean
   canValidate:     boolean
@@ -5,12 +9,13 @@ interface Props {
   comment:         string
   actorComment:    string | null
   validatedAt:     string | null
+  assessmentId:    string
   onCommentChange: (v: string) => void
   onValidate:      () => void
 }
 
 export function BilanSynthesis({
-  locked, canValidate, validating, comment,
+  locked, canValidate, validating, comment, assessmentId,
   actorComment, validatedAt, onCommentChange, onValidate,
 }: Props) {
   if (locked) {
@@ -51,8 +56,15 @@ export function BilanSynthesis({
         </div>
       </div>
 
+      {/* Aide IA — visible uniquement quand les 3 tests sont terminés */}
+      {canValidate && (
+        <div className="mt-4">
+          <BilanAiSuggestion assessmentId={assessmentId} onUse={onCommentChange} />
+        </div>
+      )}
+
       <textarea
-        className="mt-4 w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 text-[14px] leading-relaxed text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-400 focus:bg-white transition-all min-h-[140px] resize-none"
+        className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 text-[14px] leading-relaxed text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-400 focus:bg-white transition-all min-h-[140px] resize-none"
         placeholder="Rédigez votre synthèse ici… Profil dominant, points forts, axes d'orientation envisagés."
         value={comment}
         onChange={e => onCommentChange(e.target.value)}/>

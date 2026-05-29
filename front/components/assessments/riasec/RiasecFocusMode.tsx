@@ -53,29 +53,14 @@ export function RiasecFocusMode({ questions, answers, setAnswers, onFinish, onEx
 
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-slate-50 to-white">
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[60vh] opacity-50"
-        style={{ background: `radial-gradient(60% 50% at 50% 0%, ${profile.tone}18, transparent 70%)` }} />
+      {/* Halo neutre */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[60vh] opacity-30"
+        style={{ background: "radial-gradient(60% 50% at 50% 0%, #6366f118, transparent 70%)" }} />
 
       <RiasecFocusTopBar i={i} questions={questions} answers={answers}
         onNavigate={setI} onExit={onExit} />
 
       <div className="relative z-10 mx-auto max-w-3xl px-6 pt-10 pb-40">
-        <div className="flex items-center gap-4 mb-7">
-          <RiasecProfileIllustration type={profile.letter} size={64} />
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-[.14em] text-slate-400 mb-1">
-              Rubrique {profile.letter}
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="font-display text-[18px] font-bold" style={{ color: profile.tone }}>
-                {profile.name}
-              </span>
-              <span className="text-slate-300">·</span>
-              <span className="text-[12px] font-medium text-slate-500">{profile.trait}</span>
-            </div>
-          </div>
-        </div>
-
         <p className="font-display text-[34px] sm:text-[44px] leading-[1.1] font-bold tracking-tight text-slate-900 max-w-[22ch]">
           {q.text}
         </p>
@@ -83,7 +68,7 @@ export function RiasecFocusMode({ questions, answers, setAnswers, onFinish, onEx
         <div className="mt-12">
           <DiscLikert style={likertStyle} value={value}
             onChange={(v) => setAnswers(p => ({ ...p, [q.id]: v }))}
-            accent={profile.tone} />
+            accent="#6366f1" />
         </div>
 
         <div className="mt-8 hidden sm:flex items-center gap-2 text-[11px] text-slate-400">
@@ -98,7 +83,7 @@ export function RiasecFocusMode({ questions, answers, setAnswers, onFinish, onEx
       </div>
 
       <DiscFocusCTABar i={i} total={questions.length} answeredCount={answeredCount}
-        profileTone={profile.tone} onPrev={prev} onNext={next} onFinish={onFinish} />
+        profileTone="#6366f1" onPrev={prev} onNext={next} onFinish={onFinish} />
     </div>
   )
 }

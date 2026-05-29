@@ -63,11 +63,11 @@ class Assessment(Base):
             "(student_profile_id IS NULL AND external_young_id IS NOT NULL)",
             name="chk_subject_exclusive"
         ),
-        CheckConstraint("vak_v_score BETWEEN 0 AND 20",  name="chk_vak_v"),
-        CheckConstraint("vak_a_score BETWEEN 0 AND 20",  name="chk_vak_a"),
-        CheckConstraint("vak_k_score BETWEEN 0 AND 20",  name="chk_vak_k"),
+        CheckConstraint("vak_v_score BETWEEN 0 AND 50",  name="chk_vak_v"),
+        CheckConstraint("vak_a_score BETWEEN 0 AND 50",  name="chk_vak_a"),
+        CheckConstraint("vak_k_score BETWEEN 0 AND 50",  name="chk_vak_k"),
         CheckConstraint("vak_dominant IN ('V','A','K')",  name="chk_vak_dom"),
-        CheckConstraint("char_length(riasec_code) = 2",  name="chk_riasec"),
+        CheckConstraint("char_length(riasec_code) = 3",  name="chk_riasec"),
         CheckConstraint("disc_dominant IN ('D','I','S','C')", name="chk_disc"),
         CheckConstraint("serie IN ('A1', 'A2', 'S', 'OSE', 'C', 'D', 'L')", name="chk_serie_assess"),
     )

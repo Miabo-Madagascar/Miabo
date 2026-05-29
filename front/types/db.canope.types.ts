@@ -7,12 +7,14 @@ import type { AssessmentStatus, ResourceType } from "./enums"
 
 /** Scores bruts RIASEC — 6 dimensions */
 export interface RiasecScores {
+  [key: string]: number
   R: number; I: number; A: number
   S: number; E: number; C: number
 }
 
 /** Scores bruts DISC — 4 dimensions */
 export interface DiscScores {
+  [key: string]: number
   D: number; I: number; S: number; C: number
 }
 
