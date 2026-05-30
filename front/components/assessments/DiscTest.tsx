@@ -1,14 +1,11 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import { TestInstructionScreen } from "./TestInstructionScreen"
 import { DISC_QUESTIONS } from "./data/discQuestions"
-import { DISC_ORDER } from "./data/discProfiles"
-import type { DiscType } from "./data/discProfiles"
 import { DiscStickyHeader } from "./disc/DiscStickyHeader"
 import { DiscHero } from "./disc/DiscHero"
-import { DiscSectionHeader } from "./disc/DiscSectionHeader"
-import { DiscQuestionCard } from "./disc/DiscQuestionCard"
-import { DiscSidebar } from "./disc/DiscSidebar"
+import { DiscChoiceCard } from "./disc/DiscChoiceCard"
 import { DiscFocusMode } from "./disc/DiscFocusMode"
 import { DiscResults } from "./disc/DiscResults"
 import { DiscCTABar } from "./disc/DiscCTABar"
@@ -19,19 +16,25 @@ interface Props {
 }
 
 export function DiscTest({ onSave, onCancel }: Props) {
-  const [answers, setAnswers]     = useState<Record<number, number>>({})
-  const [submitted, setSubmitted] = useState(false)
-  const [mode, setMode]           = useState<"continuous" | "focus">("continuous")
-  const [loading, setLoading]     = useState(false)
+  const [answers, setAnswers]       = useState<Record<number, string>>({})
+  const [submitted, setSubmitted]   = useState(false)
+  const [mode, setMode]             = useState<"continuous" | "focus">("continuous")
+  const [loading, setLoading]       = useState(false)
+  const [showInstructions, setShowInstructions] = useState(true)
 
   const total         = DISC_QUESTIONS.length
   const answeredCount = Object.keys(answers).length
   const progress      = (answeredCount / total) * 100
   const isComplete    = answeredCount === total
 
+  /* Scoring : chaque choix apporte 1 point au type de l'option sélectionnée */
   const scores = useMemo(() => {
     const s: Record<string, number> = { D: 0, I: 0, S: 0, C: 0 }
-    DISC_QUESTIONS.forEach(q => { s[q.type] += (answers[q.id] ?? 0) })
+    DISC_QUESTIONS.forEach(q => {
+      const key = answers[q.id]
+      const opt = key ? q.options.find(o => o.key === key) : null
+      if (opt) s[opt.type]++
+    })
     return s
   }, [answers])
 
@@ -39,6 +42,19 @@ export function DiscTest({ onSave, onCancel }: Props) {
     setLoading(true)
     try { await onSave(scores) } finally { setLoading(false) }
     setSubmitted(true)
+  }
+
+  if (showInstructions) {
+    return (
+      <TestInstructionScreen
+        title="Test DISC"
+        duration="~5 min"
+        questions={DISC_QUESTIONS.length}
+        accent="#dc2626"
+        onStart={() => setShowInstructions(false)}
+        onCancel={onCancel}
+      />
+    )
   }
 
   if (submitted) {
@@ -53,61 +69,40 @@ export function DiscTest({ onSave, onCancel }: Props) {
     return (
       <DiscFocusMode questions={DISC_QUESTIONS}
         answers={answers} setAnswers={setAnswers}
-        onFinish={handleFinish} onExit={() => setMode("continuous")}
-        likertStyle="numbers" />
+        onFinish={handleFinish} onExit={() => setMode("continuous")} loading={loading} />
     )
   }
 
-  const grouped = DISC_ORDER.map(type => ({
-    type,
-    questions: DISC_QUESTIONS.filter(q => q.type === type),
-  }))
-
-  let absIdx = 0
-
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-7xl px-6">
+      <div className="mx-auto max-w-3xl px-6">
         <DiscStickyHeader progress={progress} answered={answeredCount} total={total} onExit={onCancel} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-10 pt-8 pb-32">
-          <div className="min-w-0">
-            <DiscHero totalCount={total} />
-
-            {grouped.map((group, gi) => {
-              const sectionAnswered = group.questions.filter(q => answers[q.id] != null).length
-              return (
-                <section key={group.type}>
-                  <DiscSectionHeader
-                    type={group.type}
-                    indexLabel={`Rubrique ${gi + 1} / 4`}
-                    answered={sectionAnswered}
-                    total={group.questions.length} />
-                  <div className="flex flex-col gap-4">
-                    {group.questions.map(q => {
-                      const idx = absIdx++
-                      return (
-                        <DiscQuestionCard key={q.id} q={q} idx={idx}
-                          value={answers[q.id]}
-                          onChange={(v) => setAnswers(p => ({ ...p, [q.id]: v }))}
-                          likertStyle="numbers" />
-                      )
-                    })}
-                  </div>
-                </section>
-              )
-            })}
+        <div className="pt-8 pb-32">
+          <DiscHero totalCount={total} />
+          <div className="flex flex-col gap-4 mt-8">
+            {DISC_QUESTIONS.map((q, idx) => (
+              <DiscChoiceCard
+                key={q.id}
+                id={q.id}
+                idx={idx}
+                options={q.options}
+                value={answers[q.id]}
+                onChange={(key) => setAnswers(p => ({ ...p, [q.id]: key }))}
+              />
+            ))}
           </div>
-
-          <DiscSidebar scores={scores as Record<DiscType, number>} currentType={null} />
         </div>
       </div>
 
-      <DiscCTABar isComplete={isComplete} loading={loading}
+      <DiscCTABar
+        isComplete={isComplete}
+        loading={loading}
         remaining={total - answeredCount}
         onCancel={onCancel}
         onFocusMode={() => setMode("focus")}
-        onFinish={handleFinish} />
+        onFinish={handleFinish}
+      />
     </div>
   )
 }

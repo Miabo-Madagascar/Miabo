@@ -39,7 +39,7 @@ class CreateAssessmentRequest(BaseModel):
 
 
 class VakRequest(BaseModel):
-    """Scores bruts VAK — limites max : V=10, A=9, K=11."""
+    """Scores bruts VAK — 30 questions Likert 1-5, max 50 pts par profil (10 questions × 5)."""
     v_score: int
     a_score: int
     k_score: int
@@ -47,19 +47,19 @@ class VakRequest(BaseModel):
     @field_validator("v_score")
     @classmethod
     def check_v(cls, v: int) -> int:
-        if not 0 <= v <= 20: raise ValueError("V doit être entre 0 et 20")
+        if not 0 <= v <= 50: raise ValueError("V doit être entre 0 et 50")
         return v
 
     @field_validator("a_score")
     @classmethod
     def check_a(cls, v: int) -> int:
-        if not 0 <= v <= 20: raise ValueError("A doit être entre 0 et 20")
+        if not 0 <= v <= 50: raise ValueError("A doit être entre 0 et 50")
         return v
 
     @field_validator("k_score")
     @classmethod
     def check_k(cls, v: int) -> int:
-        if not 0 <= v <= 20: raise ValueError("K doit être entre 0 et 20")
+        if not 0 <= v <= 50: raise ValueError("K doit être entre 0 et 50")
         return v
 
 
@@ -79,6 +79,11 @@ class DiscRequest(BaseModel):
     I: int
     S: int
     C: int
+
+
+class RiasecCodeRequest(BaseModel):
+    """Code de Holland choisi manuellement après résolution d'ex-aequo."""
+    code: str
 
 
 class ValidateAssessmentRequest(BaseModel):

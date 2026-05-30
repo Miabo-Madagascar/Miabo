@@ -12,6 +12,7 @@ import { VakSidebar } from "./vak/VakSidebar"
 import { VakFocusMode } from "./vak/VakFocusMode"
 import { VakResults } from "./vak/VakResults"
 import { DiscCTABar } from "./disc/DiscCTABar"
+import { TestInstructionScreen } from "./TestInstructionScreen"
 
 interface Props {
   onSave:   (scores: Record<string, number>) => Promise<void>
@@ -19,12 +20,23 @@ interface Props {
 }
 
 export function VakTest({ onSave, onCancel }: Props) {
-  const [answers, setAnswers]     = useState<Record<number, number>>({})
-  const [submitted, setSubmitted] = useState(false)
-  const [mode, setMode]           = useState<"continuous" | "focus">("continuous")
-  const [loading, setLoading]     = useState(false)
+  const [answers, setAnswers]       = useState<Record<number, number>>({})
+  const [submitted, setSubmitted]   = useState(false)
+  const [mode, setMode]             = useState<"continuous" | "focus">("continuous")
+  const [loading, setLoading]       = useState(false)
+  const [showInstructions, setShowInstructions] = useState(true)
 
-  const total         = VAK_QUESTIONS.length
+  /* Ordre aléatoire stable pour toute la session — évite de spoiler le type par regroupement */
+  const shuffled = useMemo(() => {
+    const arr = [...VAK_QUESTIONS]
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]]
+    }
+    return arr
+  }, [])
+
+  const total         = shuffled.length
   const answeredCount = Object.keys(answers).length
   const progress      = (answeredCount / total) * 100
   const isComplete    = answeredCount === total
@@ -41,6 +53,19 @@ export function VakTest({ onSave, onCancel }: Props) {
     setSubmitted(true)
   }
 
+  if (showInstructions) {
+    return (
+      <TestInstructionScreen
+        title="Profil VAK"
+        duration="~6 min"
+        questions={total}
+        accent="#7c3aed"
+        onStart={() => setShowInstructions(false)}
+        onCancel={onCancel}
+      />
+    )
+  }
+
   if (submitted) {
     return (
       <VakResults scores={scores}
@@ -51,19 +76,12 @@ export function VakTest({ onSave, onCancel }: Props) {
 
   if (mode === "focus") {
     return (
-      <VakFocusMode questions={VAK_QUESTIONS}
+      <VakFocusMode questions={shuffled}
         answers={answers} setAnswers={setAnswers}
         onFinish={handleFinish} onExit={() => setMode("continuous")}
-        likertStyle="numbers" />
+        likertStyle="numbers" loading={loading} />
     )
   }
-
-  const grouped = VAK_ORDER.map(type => ({
-    type,
-    questions: VAK_QUESTIONS.filter(q => q.type === type),
-  }))
-
-  let absIdx = 0
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -71,36 +89,17 @@ export function VakTest({ onSave, onCancel }: Props) {
         <DiscStickyHeader progress={progress} answered={answeredCount}
           total={total} onExit={onCancel} title="Profil VAK" />
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-10 pt-8 pb-32">
-          <div className="min-w-0">
-            <VakHero totalCount={total} />
+        <div className="max-w-3xl mx-auto pt-8 pb-32">
+          <VakHero totalCount={total} />
 
-            {grouped.map((group, gi) => {
-              const sectionAnswered = group.questions.filter(q => answers[q.id] != null).length
-              return (
-                <section key={group.type}>
-                  <VakSectionHeader
-                    type={group.type}
-                    indexLabel={`Rubrique ${gi + 1} / 3`}
-                    answered={sectionAnswered}
-                    total={group.questions.length} />
-                  <div className="flex flex-col gap-4">
-                    {group.questions.map(q => {
-                      const idx = absIdx++
-                      return (
-                        <VakQuestionCard key={q.id} q={q} idx={idx}
-                          value={answers[q.id]}
-                          onChange={(v) => setAnswers(p => ({ ...p, [q.id]: v }))}
-                          likertStyle="numbers" />
-                      )
-                    })}
-                  </div>
-                </section>
-              )
-            })}
+          <div className="flex flex-col gap-4 mt-6">
+            {shuffled.map((q, idx) => (
+              <VakQuestionCard key={q.id} q={q} idx={idx}
+                value={answers[q.id]}
+                onChange={(v) => setAnswers(p => ({ ...p, [q.id]: v }))}
+                likertStyle="numbers" />
+            ))}
           </div>
-
-          <VakSidebar scores={scores as Record<VakType, number>} currentType={null} />
         </div>
       </div>
 

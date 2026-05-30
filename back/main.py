@@ -14,6 +14,7 @@ from src.routers import (
     payments, wallet, matching, messages,
     assessments, resources, admin, reports, notifications,
 )
+from src.routers import ai as ai_router
 
 API_PREFIX = "/api/v1"
 
@@ -56,6 +57,7 @@ app.include_router(resources.router,   prefix=API_PREFIX)
 app.include_router(admin.router,       prefix=API_PREFIX)
 app.include_router(reports.router,     prefix=API_PREFIX)
 app.include_router(notifications.router, prefix=API_PREFIX)
+app.include_router(ai_router.router,    prefix=API_PREFIX)
 
 
 @app.get("/health", tags=["Santé"])

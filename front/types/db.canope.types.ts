@@ -7,12 +7,14 @@ import type { AssessmentStatus, ResourceType } from "./enums"
 
 /** Scores bruts RIASEC — 6 dimensions */
 export interface RiasecScores {
+  [key: string]: number
   R: number; I: number; A: number
   S: number; E: number; C: number
 }
 
 /** Scores bruts DISC — 4 dimensions */
 export interface DiscScores {
+  [key: string]: number
   D: number; I: number; S: number; C: number
 }
 
@@ -37,7 +39,7 @@ export interface Assessment {
   riasec_scores:      RiasecScores | null
   riasec_code:        string | null
   disc_scores:        DiscScores | null
-  disc_dominant:      "D" | "I" | "S" | "C" | null
+  disc_dominant:      string | null   // 1 à 4 lettres ex: "D", "DI", "DIS"
   actor_comment:      string | null
   status:             AssessmentStatus
   created_at:         string
