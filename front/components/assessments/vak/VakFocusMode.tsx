@@ -15,9 +15,10 @@ interface Props {
   onFinish:    () => void
   onExit:      () => void
   likertStyle: LikertStyle
+  loading?:    boolean
 }
 
-export function VakFocusMode({ questions, answers, setAnswers, onFinish, onExit, likertStyle }: Props) {
+export function VakFocusMode({ questions, answers, setAnswers, onFinish, onExit, likertStyle, loading = false }: Props) {
   const [i, setI] = useState(() => {
     const idx = questions.findIndex(q => answers[q.id] == null)
     return idx === -1 ? 0 : idx
@@ -54,7 +55,7 @@ export function VakFocusMode({ questions, answers, setAnswers, onFinish, onExit,
   const answeredCount = Object.keys(answers).length
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="relative min-h-screen bg-linear-to-b from-slate-50 to-white">
       {/* Halo ambiant neutre */}
       <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[60vh] opacity-30"
         style={{ background: "radial-gradient(60% 50% at 50% 0%, #6366f118, transparent 70%)" }} />
@@ -87,7 +88,7 @@ export function VakFocusMode({ questions, answers, setAnswers, onFinish, onExit,
       </div>
 
       <DiscFocusCTABar i={i} total={questions.length} answeredCount={answeredCount}
-        profileTone={profile.tone} onPrev={prev} onNext={next} onFinish={onFinish} />
+        profileTone="#6366f1" loading={loading} onPrev={prev} onNext={next} onFinish={onFinish} />
     </div>
   )
 }

@@ -12,6 +12,7 @@ import { VakSidebar } from "./vak/VakSidebar"
 import { VakFocusMode } from "./vak/VakFocusMode"
 import { VakResults } from "./vak/VakResults"
 import { DiscCTABar } from "./disc/DiscCTABar"
+import { TestInstructionScreen } from "./TestInstructionScreen"
 
 interface Props {
   onSave:   (scores: Record<string, number>) => Promise<void>
@@ -19,10 +20,11 @@ interface Props {
 }
 
 export function VakTest({ onSave, onCancel }: Props) {
-  const [answers, setAnswers]     = useState<Record<number, number>>({})
-  const [submitted, setSubmitted] = useState(false)
-  const [mode, setMode]           = useState<"continuous" | "focus">("continuous")
-  const [loading, setLoading]     = useState(false)
+  const [answers, setAnswers]       = useState<Record<number, number>>({})
+  const [submitted, setSubmitted]   = useState(false)
+  const [mode, setMode]             = useState<"continuous" | "focus">("continuous")
+  const [loading, setLoading]       = useState(false)
+  const [showInstructions, setShowInstructions] = useState(true)
 
   /* Ordre aléatoire stable pour toute la session — évite de spoiler le type par regroupement */
   const shuffled = useMemo(() => {
@@ -51,6 +53,19 @@ export function VakTest({ onSave, onCancel }: Props) {
     setSubmitted(true)
   }
 
+  if (showInstructions) {
+    return (
+      <TestInstructionScreen
+        title="Profil VAK"
+        duration="~6 min"
+        questions={total}
+        accent="#7c3aed"
+        onStart={() => setShowInstructions(false)}
+        onCancel={onCancel}
+      />
+    )
+  }
+
   if (submitted) {
     return (
       <VakResults scores={scores}
@@ -64,7 +79,7 @@ export function VakTest({ onSave, onCancel }: Props) {
       <VakFocusMode questions={shuffled}
         answers={answers} setAnswers={setAnswers}
         onFinish={handleFinish} onExit={() => setMode("continuous")}
-        likertStyle="numbers" />
+        likertStyle="numbers" loading={loading} />
     )
   }
 

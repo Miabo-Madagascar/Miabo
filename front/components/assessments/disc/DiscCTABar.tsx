@@ -22,21 +22,33 @@ export function DiscCTABar({ isComplete, loading, remaining, onCancel, onFocusMo
 
         <div className="flex items-center gap-3">
           <button onClick={onCancel}
-            className="rounded-xl px-4 py-2.5 text-[13px] font-semibold text-slate-600 hover:bg-slate-100 transition">
+            className="cursor-pointer rounded-xl px-4 py-2.5 text-[13px] font-semibold text-slate-600 hover:bg-slate-100 transition">
             Enregistrer & quitter
           </button>
           <button onClick={onFocusMode}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-50 transition">
+            className="cursor-pointer rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-50 transition">
             Mode Focus
           </button>
           <button onClick={onFinish} disabled={!isComplete || loading}
-            className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-[13px] font-bold text-white shadow-md transition disabled:opacity-40 disabled:cursor-not-allowed"
+            className="cursor-pointer inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-[13px] font-bold text-white shadow-md transition disabled:opacity-40 disabled:cursor-not-allowed"
             style={{ background: isComplete ? "var(--color-primary-500)" : "#94a3b8" }}>
-            {isComplete ? "Découvrir mes résultats" : `Encore ${remaining} pour terminer`}
-            {isComplete && (
-              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
+            {loading ? (
+              <>
+                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+                Calcul en cours…
+              </>
+            ) : isComplete ? (
+              <>
+                Découvrir mes résultats
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </>
+            ) : (
+              `Encore ${remaining} pour terminer`
             )}
           </button>
         </div>

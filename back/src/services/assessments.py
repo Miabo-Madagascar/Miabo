@@ -31,8 +31,16 @@ def _riasec_code(scores: dict) -> str:
 
 
 def _disc_dominant(scores: dict) -> str:
-    """Profil dominant DISC = dimension avec le score le plus élevé."""
-    return max(scores, key=scores.get)
+    """Code DISC = profils dont le score atteint ≥ 40 % du score dominant.
+    Donne 1 à 4 lettres selon les ex-aequo (ex : 'DI', 'DIS').
+    Seuil 40 % aligné avec DiscResults côté front."""
+    top_score = max(scores.values(), default=0) or 1
+    threshold = top_score * 0.4
+    dominants = sorted(
+        [k for k, v in scores.items() if v >= threshold],
+        key=lambda k: scores[k], reverse=True,
+    )
+    return "".join(dominants) or max(scores, key=scores.get)
 
 
 # ── Helpers BDD ───────────────────────────────────────────────────────────────

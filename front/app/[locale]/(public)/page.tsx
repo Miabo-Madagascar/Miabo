@@ -105,7 +105,7 @@ export default async function HomePage({ params }: HomePageProps) {
                 Commencez<br />Votre Voyage Ici
               </h2>
               <p className="text-xl md:text-2xl font-bold leading-relaxed opacity-80 decoration-cyan-400 underline-offset-8">
-                À travers des programmes certifiés CANOPE proposés toute l&apos;année, les élèves et leurs tuteurs sont accompagnés sur le chemin de l&apos;école à la carrière.
+                À travers des programmes certifiés proposés toute l&apos;année, les élèves et leurs tuteurs sont accompagnés sur le chemin de l&apos;école à la carrière.
               </p>
             </div>
             
@@ -163,7 +163,7 @@ export default async function HomePage({ params }: HomePageProps) {
             <Link href={`/${locale}/auth/register?role=student`} className="group relative overflow-hidden rounded-2xl aspect-[4/3] block">
               <Image
                 src="/student-hero.png"
-                alt="Tutorat certifié CANOPE"
+                alt="Tutorat certifié SESAME"
                 fill
                 className="object-cover object-center scale-105 group-hover:scale-110 transition-transform duration-700"
               />
@@ -172,7 +172,7 @@ export default async function HomePage({ params }: HomePageProps) {
               <div className="absolute bottom-0 left-0 right-0 p-8 z-10">
                 <div className="w-8 h-[3px] bg-white/60 mb-5 group-hover:w-14 transition-all duration-500" />
                 <h3 className="text-white font-black text-[28px] uppercase leading-[1.1] tracking-tight">
-                  Tutorat<br />Certifié CANOPE
+                  Tutorat<br />Certifié SESAME
                 </h3>
                 <div className="mt-4 flex items-center gap-2 text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all duration-300">
                   <ArrowRight size={15} />
@@ -274,7 +274,7 @@ export default async function HomePage({ params }: HomePageProps) {
                </div>
               <address className="not-italic text-sm font-bold text-neutral-500 leading-relaxed max-w-xs space-y-1">
                 <p>Antananarivo, Madagascar</p>
-                <p>Soutien scolaire bilingue certifié CANOPE.</p>
+                <p>Soutien scolaire bilingue certifié SESAME.</p>
                 <p className="text-black font-black mt-4">(+261) 34 11 222 33</p>
               </address>
             </div>

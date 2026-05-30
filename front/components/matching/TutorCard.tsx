@@ -33,7 +33,7 @@ export function TutorCard({ tutor, locale }: TutorCardProps) {
             {tutor.canope_certified && (
               <>
                 <span>·</span>
-                <Badge variant="success">CANOPE</Badge>
+                <Badge variant="success">Certifié</Badge>
               </>
             )}
           </div>

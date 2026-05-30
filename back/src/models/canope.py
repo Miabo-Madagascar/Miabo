@@ -68,7 +68,7 @@ class Assessment(Base):
         CheckConstraint("vak_k_score BETWEEN 0 AND 50",  name="chk_vak_k"),
         CheckConstraint("vak_dominant IN ('V','A','K')",  name="chk_vak_dom"),
         CheckConstraint("char_length(riasec_code) = 3",  name="chk_riasec"),
-        CheckConstraint("disc_dominant IN ('D','I','S','C')", name="chk_disc"),
+        CheckConstraint("char_length(disc_dominant) BETWEEN 1 AND 4", name="chk_disc"),
         CheckConstraint("serie IN ('A1', 'A2', 'S', 'OSE', 'C', 'D', 'L')", name="chk_serie_assess"),
     )
 

@@ -29,8 +29,8 @@ const SLIDES: Slide[] = [
     imageAlt: "Élève malgache concentré sur ses études",
   },
   {
-    title: ["Tuteurs", "Certifiés CANOPE"],
-    subtitle: "Des enseignants validés par CANOPE, spécialisés dans l\u2019accompagnement personnalisé de chaque élève.",
+    title: ["Tuteurs", "Certifiés SESAME"],
+    subtitle: "Des enseignants certifiés, spécialisés dans l\u2019accompagnement personnalisé de chaque élève.",
     cta: "Devenir tuteur",
     ctaHref: "/auth/register?role=tutor",
     image: "/hero-slide-2.jpg",

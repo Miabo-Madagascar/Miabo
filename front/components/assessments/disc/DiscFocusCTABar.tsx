@@ -3,19 +3,20 @@ interface Props {
   total:        number
   answeredCount: number
   profileTone:  string
+  loading?:     boolean
   onPrev:       () => void
   onNext:       () => void
   onFinish:     () => void
 }
 
-export function DiscFocusCTABar({ i, total, answeredCount, profileTone, onPrev, onNext, onFinish }: Props) {
+export function DiscFocusCTABar({ i, total, answeredCount, profileTone, loading = false, onPrev, onNext, onFinish }: Props) {
   const progress = (answeredCount / total) * 100
 
   return (
     <div className="fixed bottom-0 left-64 right-0 z-20 border-t border-slate-200 bg-white/90 backdrop-blur-md">
       <div className="mx-auto max-w-3xl px-6 py-4 flex items-center justify-between gap-4">
         <button onClick={onPrev} disabled={i === 0}
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-semibold text-slate-700 transition disabled:opacity-40 hover:bg-slate-50">
+          className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-semibold text-slate-700 transition disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50">
           <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M15 18l-6-6 6-6" />
           </svg>
@@ -37,7 +38,7 @@ export function DiscFocusCTABar({ i, total, answeredCount, profileTone, onPrev, 
 
         {i < total - 1 ? (
           <button onClick={onNext}
-            className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white shadow-md transition hover:brightness-105"
+            className="cursor-pointer inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white shadow-md transition hover:brightness-105"
             style={{ background: profileTone }}>
             Suivant
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -45,12 +46,24 @@ export function DiscFocusCTABar({ i, total, answeredCount, profileTone, onPrev, 
             </svg>
           </button>
         ) : (
-          <button onClick={onFinish} disabled={answeredCount < total}
-            className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-[13px] font-bold text-white shadow-md transition disabled:opacity-40 bg-[var(--color-primary-500)]">
-            Découvrir mes résultats
-            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M5 12h14M13 6l6 6-6 6" />
-            </svg>
+          <button onClick={onFinish} disabled={answeredCount < total || loading}
+            className="cursor-pointer inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-[13px] font-bold text-white shadow-md transition disabled:opacity-40 disabled:cursor-not-allowed bg-primary">
+            {loading ? (
+              <>
+                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+                Calcul en cours…
+              </>
+            ) : (
+              <>
+                Découvrir mes résultats
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </>
+            )}
           </button>
         )}
       </div>

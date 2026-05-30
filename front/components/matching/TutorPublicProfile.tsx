@@ -80,7 +80,7 @@ export function TutorPublicProfile({ tutorId, locale }: TutorPublicProfileProps)
             <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
               {tutor.full_name}
             </h1>
-            {tutor.canope_certified && <Badge variant="success">CANOPE</Badge>}
+            {tutor.canope_certified && <Badge variant="success">Certifié</Badge>}
           </div>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">
             ⭐ {tutor.avg_rating.toFixed(1)} · {tutor.total_sessions} sessions

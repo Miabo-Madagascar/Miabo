@@ -53,7 +53,7 @@ export function TutorSearchClient({ locale }: TutorSearchClientProps) {
       <div>
         <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Trouver un tuteur</h1>
         <p className="mt-1 text-sm text-[var(--text-secondary)]">
-          Tuteurs certifiés CANOPE, disponibles à Madagascar.
+          Tuteurs certifiés, disponibles à Madagascar.
         </p>
       </div>
 
