@@ -119,7 +119,8 @@ export function RiasecCodeSelector({ ranked, onCommit }: Props) {
           <p className="text-[12px] text-amber-700 mt-0.5 leading-relaxed">
             Ces profils ont le même score&nbsp;({step.tiedProfiles[0].score}&nbsp;pts).{" "}
             Choisissez votre profil{" "}
-            <strong>n°{nextSlot + 1}&nbsp;({ORDINALS[nextSlot]})</strong>&nbsp;:
+            <strong>n°{nextSlot + 1}&nbsp;({ORDINALS[nextSlot]})</strong>{" "}
+            selon votre observation et vécu&nbsp;:
           </p>
         </div>
       </div>

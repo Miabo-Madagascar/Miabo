@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import { TestInstructionScreen } from "./TestInstructionScreen"
 import { DISC_QUESTIONS } from "./data/discQuestions"
 import { DiscStickyHeader } from "./disc/DiscStickyHeader"
 import { DiscHero } from "./disc/DiscHero"
@@ -15,10 +16,11 @@ interface Props {
 }
 
 export function DiscTest({ onSave, onCancel }: Props) {
-  const [answers, setAnswers]     = useState<Record<number, string>>({})
-  const [submitted, setSubmitted] = useState(false)
-  const [mode, setMode]           = useState<"continuous" | "focus">("continuous")
-  const [loading, setLoading]     = useState(false)
+  const [answers, setAnswers]       = useState<Record<number, string>>({})
+  const [submitted, setSubmitted]   = useState(false)
+  const [mode, setMode]             = useState<"continuous" | "focus">("continuous")
+  const [loading, setLoading]       = useState(false)
+  const [showInstructions, setShowInstructions] = useState(true)
 
   const total         = DISC_QUESTIONS.length
   const answeredCount = Object.keys(answers).length
@@ -42,6 +44,19 @@ export function DiscTest({ onSave, onCancel }: Props) {
     setSubmitted(true)
   }
 
+  if (showInstructions) {
+    return (
+      <TestInstructionScreen
+        title="Test DISC"
+        duration="~5 min"
+        questions={DISC_QUESTIONS.length}
+        accent="#dc2626"
+        onStart={() => setShowInstructions(false)}
+        onCancel={onCancel}
+      />
+    )
+  }
+
   if (submitted) {
     return (
       <DiscResults scores={scores}
@@ -54,7 +69,7 @@ export function DiscTest({ onSave, onCancel }: Props) {
     return (
       <DiscFocusMode questions={DISC_QUESTIONS}
         answers={answers} setAnswers={setAnswers}
-        onFinish={handleFinish} onExit={() => setMode("continuous")} />
+        onFinish={handleFinish} onExit={() => setMode("continuous")} loading={loading} />
     )
   }
 

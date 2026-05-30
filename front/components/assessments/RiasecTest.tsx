@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import { TestInstructionScreen } from "./TestInstructionScreen"
 import { RIASEC_QUESTIONS } from "./data/riasecQuestions"
 import { RIASEC_ORDER } from "./data/riasecProfiles"
 import type { RiasecType } from "./data/riasecProfiles"
@@ -20,10 +21,11 @@ interface Props {
 }
 
 export function RiasecTest({ onSave, onCancel, onCodeUpdate }: Props) {
-  const [answers, setAnswers]     = useState<Record<number, number>>({})
-  const [submitted, setSubmitted] = useState(false)
-  const [mode, setMode]           = useState<"continuous" | "focus">("continuous")
-  const [loading, setLoading]     = useState(false)
+  const [answers, setAnswers]       = useState<Record<number, number>>({})
+  const [submitted, setSubmitted]   = useState(false)
+  const [mode, setMode]             = useState<"continuous" | "focus">("continuous")
+  const [loading, setLoading]       = useState(false)
+  const [showInstructions, setShowInstructions] = useState(true)
 
   /* Ordre aléatoire stable pour toute la session */
   const shuffled = useMemo(() => {
@@ -52,6 +54,19 @@ export function RiasecTest({ onSave, onCancel, onCodeUpdate }: Props) {
     setSubmitted(true)
   }
 
+  if (showInstructions) {
+    return (
+      <TestInstructionScreen
+        title="Test RIASEC"
+        duration="~10 min"
+        questions={total}
+        accent="#be185d"
+        onStart={() => setShowInstructions(false)}
+        onCancel={onCancel}
+      />
+    )
+  }
+
   if (submitted) {
     return (
       <RiasecResults scores={scores}
@@ -66,7 +81,7 @@ export function RiasecTest({ onSave, onCancel, onCodeUpdate }: Props) {
       <RiasecFocusMode questions={shuffled}
         answers={answers} setAnswers={setAnswers}
         onFinish={handleFinish} onExit={() => setMode("continuous")}
-        likertStyle="numbers" />
+        likertStyle="numbers" loading={loading} />
     )
   }
 

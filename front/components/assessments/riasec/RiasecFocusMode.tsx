@@ -15,9 +15,10 @@ interface Props {
   onFinish:    () => void
   onExit:      () => void
   likertStyle: LikertStyle
+  loading?:    boolean
 }
 
-export function RiasecFocusMode({ questions, answers, setAnswers, onFinish, onExit, likertStyle }: Props) {
+export function RiasecFocusMode({ questions, answers, setAnswers, onFinish, onExit, likertStyle, loading = false }: Props) {
   const [i, setI] = useState(() => {
     const idx = questions.findIndex(q => answers[q.id] == null)
     return idx === -1 ? 0 : idx
@@ -83,7 +84,7 @@ export function RiasecFocusMode({ questions, answers, setAnswers, onFinish, onEx
       </div>
 
       <DiscFocusCTABar i={i} total={questions.length} answeredCount={answeredCount}
-        profileTone="#6366f1" onPrev={prev} onNext={next} onFinish={onFinish} />
+        profileTone="#6366f1" loading={loading} onPrev={prev} onNext={next} onFinish={onFinish} />
     </div>
   )
 }

@@ -19,7 +19,7 @@ const IMAGES: HeroImage[] = [
 ]
 
 const STATS = [
-  { value: "500+",  label: "Tuteurs certifiés CANOPE" },
+  { value: "500+",  label: "Tuteurs certifiés" },
   { value: "2 500", label: "Élèves accompagnés" },
   { value: "FR/MG", label: "Plateforme bilingue" },
 ]

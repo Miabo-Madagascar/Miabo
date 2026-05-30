@@ -39,7 +39,7 @@ export interface Assessment {
   riasec_scores:      RiasecScores | null
   riasec_code:        string | null
   disc_scores:        DiscScores | null
-  disc_dominant:      "D" | "I" | "S" | "C" | null
+  disc_dominant:      string | null   // 1 à 4 lettres ex: "D", "DI", "DIS"
   actor_comment:      string | null
   status:             AssessmentStatus
   created_at:         string

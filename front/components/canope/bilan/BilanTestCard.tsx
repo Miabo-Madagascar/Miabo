@@ -12,9 +12,11 @@ interface Props {
 export function BilanTestCard({ test, dominant, locked, onStart, onView }: Props) {
   const completed = dominant != null
 
-  /* Pour RIASEC : on décompose le code en 3 lettres (ex: "RES" → ["R","E","S"]) */
-  const isRiasec        = test.id === "riasec"
-  const dominantLetters = completed && isRiasec ? dominant.split("") : (completed ? [dominant[0]] : [])
+  /* RIASEC (3 lettres) et DISC (1-4 lettres) : décomposer le code en lettres individuelles */
+  const isMultiProfile  = test.id === "riasec" || test.id === "disc"
+  const dominantLetters = completed
+    ? (isMultiProfile ? dominant!.split("") : [dominant![0]])
+    : []
   const dominantProfiles = dominantLetters
     .map(l => test.profiles.find(p => p.letter === l))
     .filter(Boolean) as typeof test.profiles
@@ -27,7 +29,7 @@ export function BilanTestCard({ test, dominant, locked, onStart, onView }: Props
     }`}>
 
       {/* Hero illustration 160px */}
-      <div className="relative h-[160px] w-full overflow-hidden">
+      <div className="relative h-40 w-full overflow-hidden">
         <BilanHeroIllustration testId={test.id}/>
         {completed && (
           <span className="absolute top-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 border border-emerald-200">
@@ -37,7 +39,7 @@ export function BilanTestCard({ test, dominant, locked, onStart, onView }: Props
             Terminé
           </span>
         )}
-        <div aria-hidden className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white to-transparent"/>
+        <div aria-hidden className="absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-white to-transparent"/>
       </div>
 
       {/* Body */}
@@ -75,10 +77,10 @@ export function BilanTestCard({ test, dominant, locked, onStart, onView }: Props
         {completed && dominantProfiles.length > 0 && (
           <div className="mt-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
             <div className="text-[10px] font-bold uppercase tracking-[.14em] text-slate-500 mb-2">
-              {isRiasec ? "Code de Holland" : "Profil dominant"}
+              {test.id === "riasec" ? "Code de Holland" : isMultiProfile && dominantProfiles.length > 1 ? "Profil combiné" : "Profil dominant"}
             </div>
 
-            {isRiasec ? (
+            {isMultiProfile ? (
               /* Code de Holland : badges en ligne + code texte */
               <div className="flex items-center gap-2">
                 {dominantProfiles.map(p => (

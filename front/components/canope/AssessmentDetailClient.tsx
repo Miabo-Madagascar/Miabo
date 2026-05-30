@@ -102,7 +102,21 @@ export function AssessmentDetailClient({ assessmentId, locale }: Props) {
           .join("")
       : assessment.riasec_code
 
-  const dominants = { vak: assessment.vak_dominant, riasec: riasecCode, disc: assessment.disc_dominant }
+  /* Recalcule le code DISC depuis les scores si l'ancien dominant est à 1 lettre */
+  const discDominant = (() => {
+    if (!assessment.disc_scores) return assessment.disc_dominant
+    const scores = assessment.disc_scores
+    const topScore = Math.max(...Object.values(scores))
+    const threshold = topScore * 0.4
+    const dominants = (Object.entries(scores) as [string, number][])
+      .filter(([, v]) => v >= threshold)
+      .sort(([, a], [, b]) => b - a)
+      .map(([k]) => k)
+      .join("")
+    return dominants || assessment.disc_dominant
+  })()
+
+  const dominants = { vak: assessment.vak_dominant, riasec: riasecCode, disc: discDominant }
   const completedCount = Object.values(dominants).filter(Boolean).length
   const allCompleted   = completedCount === 3
 

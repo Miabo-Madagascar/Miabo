@@ -11,13 +11,14 @@ interface Props {
   setAnswers: React.Dispatch<React.SetStateAction<Record<number, string>>>
   onFinish:   () => void
   onExit:     () => void
+  loading?:   boolean
 }
 
 /* Clavier : 1/2/3/4 → a/b/c/d */
 const KEY_MAP: Record<string, "a" | "b" | "c" | "d"> = { "1": "a", "2": "b", "3": "c", "4": "d" }
 const OPTION_LABELS = ["A", "B", "C", "D"]
 
-export function DiscFocusMode({ questions, answers, setAnswers, onFinish, onExit }: Props) {
+export function DiscFocusMode({ questions, answers, setAnswers, onFinish, onExit, loading = false }: Props) {
   const [i, setI] = useState(() => {
     const idx = questions.findIndex(q => answers[q.id] == null)
     return idx === -1 ? 0 : idx
@@ -102,7 +103,7 @@ export function DiscFocusMode({ questions, answers, setAnswers, onFinish, onExit
       </div>
 
       <DiscFocusCTABar i={i} total={questions.length} answeredCount={answeredCount}
-        profileTone="var(--color-primary-500)" onPrev={prev} onNext={next} onFinish={onFinish} />
+        profileTone="var(--color-primary-500)" loading={loading} onPrev={prev} onNext={next} onFinish={onFinish} />
     </div>
   )
 }
