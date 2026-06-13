@@ -30,6 +30,7 @@ const ROLE_ROOT: Record<string, string> = {
 const MENU_ITEMS: NavItem[] = [
   { label: "Dashboard",          href: "",                        icon: BarChart3,     roles: ["student", "tutor", "parent", "admin", "canope", "cosp"] },
   { label: "Trouver Tuteur",     href: "/tuteurs",                icon: Search,        roles: ["student"] },
+  { label: "Mon bilan",          href: "/eleve/bilan",            icon: ClipboardList, roles: ["student"] },
   { label: "Sessions",           href: "/sessions",               icon: Calendar,      roles: ["student", "tutor", "parent"] },
   { label: "Messages",           href: "/messages",               icon: MessageSquare, roles: ["student", "tutor", "parent", "admin"] },
   { label: "Portefeuille",       href: "/wallet",                 icon: Wallet,        roles: ["student", "tutor", "parent"] },

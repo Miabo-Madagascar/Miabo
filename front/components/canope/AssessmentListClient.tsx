@@ -14,12 +14,15 @@ import { AssessmentFilters, type FilterState } from "./AssessmentFilters"
 interface Props { locale: string; basePath: string }
 
 const STATUS_CFG = {
-  [AssessmentStatus.Draft]:      { label: "Brouillon", cls: "bg-gray-100 text-gray-600" },
-  [AssessmentStatus.InProgress]: { label: "En cours",  cls: "bg-primary-50 text-primary-700" },
-  [AssessmentStatus.Validated]:  { label: "Validé",    cls: "bg-success/10 text-success" },
+  [AssessmentStatus.Draft]:             { label: "Brouillon", cls: "bg-gray-100 text-gray-600" },
+  [AssessmentStatus.InProgress]:        { label: "En cours",  cls: "bg-primary-50 text-primary-700" },
+  [AssessmentStatus.PendingValidation]: { label: "À valider", cls: "bg-amber-50 text-amber-700" },
+  [AssessmentStatus.Validated]:         { label: "Validé",    cls: "bg-success/10 text-success" },
 }
 
 const EMPTY_FILTERS: FilterState = { search: "", dateFrom: "", dateTo: "", sortBy: "date_desc" }
+
+const displayName = (a: Assessment) => a.external_young_full_name ?? a.student_full_name ?? "Jeune externe"
 
 export function AssessmentListClient({ locale, basePath }: Props) {
   const [rows,    setRows]    = useState<Assessment[]>([])
@@ -38,14 +41,14 @@ export function AssessmentListClient({ locale, basePath }: Props) {
     let data = [...rows]
     if (filters.search) {
       const q = filters.search.toLowerCase()
-      data = data.filter(a => (a.external_young_full_name ?? "").toLowerCase().includes(q))
+      data = data.filter(a => displayName(a).toLowerCase().includes(q))
     }
     if (filters.dateFrom) data = data.filter(a => a.created_at >= filters.dateFrom)
     if (filters.dateTo)   data = data.filter(a => a.created_at <= filters.dateTo + "T23:59:59")
     data.sort((a, b) => {
       if (filters.sortBy === "date_asc")  return a.created_at.localeCompare(b.created_at)
-      if (filters.sortBy === "name_asc")  return (a.external_young_full_name ?? "").localeCompare(b.external_young_full_name ?? "")
-      if (filters.sortBy === "name_desc") return (b.external_young_full_name ?? "").localeCompare(a.external_young_full_name ?? "")
+      if (filters.sortBy === "name_asc")  return displayName(a).localeCompare(displayName(b))
+      if (filters.sortBy === "name_desc") return displayName(b).localeCompare(displayName(a))
       return b.created_at.localeCompare(a.created_at)
     })
     return data
@@ -83,14 +86,23 @@ export function AssessmentListClient({ locale, basePath }: Props) {
             <tbody className="divide-y divide-border">
               {filtered.map(a => {
                 const cfg  = STATUS_CFG[a.status as AssessmentStatus] ?? STATUS_CFG[AssessmentStatus.Draft]
-                const name = a.external_young_full_name ?? (a.student_profile_id ? "Élève MIABO" : "Jeune externe")
+                const name = displayName(a)
                 const date = new Date(a.created_at).toLocaleDateString("fr-MG", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
                 const val  = (v: string | null) => v
                   ? <span className="font-bold text-primary">{v}</span>
                   : <span className="text-text-muted">—</span>
                 return (
                   <tr key={a.id} className="transition-colors hover:bg-bg-subtle">
-                    <td className="px-5 py-3 font-semibold text-text-primary">{name}</td>
+                    <td className="px-5 py-3 font-semibold text-text-primary">
+                      <div className="flex items-center gap-2">
+                        <span>{name}</span>
+                        {a.administered_by === null && (
+                          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                            Auto-bilan élève
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-center text-xs text-text-muted">{date}</td>
                     <td className="px-4 py-3 text-center">{val(a.vak_dominant)}</td>
                     <td className="px-4 py-3 text-center">{val(a.riasec_code)}</td>

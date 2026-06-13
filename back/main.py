@@ -12,7 +12,7 @@ from src.config.database import engine, Base
 from src.routers import (
     auth, profiles, tutors, sessions,
     payments, wallet, matching, messages,
-    assessments, resources, admin, reports, notifications,
+    assessments, self_assessments, resources, admin, reports, notifications,
 )
 from src.routers import ai as ai_router
 
@@ -53,6 +53,7 @@ app.include_router(wallet.router,      prefix=API_PREFIX)
 app.include_router(matching.router,    prefix=API_PREFIX)
 app.include_router(messages.router,    prefix=API_PREFIX)
 app.include_router(assessments.router, prefix=API_PREFIX)
+app.include_router(self_assessments.router, prefix=API_PREFIX)
 app.include_router(resources.router,   prefix=API_PREFIX)
 app.include_router(admin.router,       prefix=API_PREFIX)
 app.include_router(reports.router,     prefix=API_PREFIX)

@@ -52,9 +52,10 @@ export enum EscrowStatus {
 
 /** Cycle d'un bilan d'orientation — CDC §COSP */
 export enum AssessmentStatus {
-  Draft      = "draft",
-  InProgress = "in_progress",
-  Validated  = "validated",
+  Draft             = "draft",
+  InProgress        = "in_progress",
+  PendingValidation = "pending_validation",
+  Validated         = "validated",
 }
 
 /** Types de messages — CDC §MSG */

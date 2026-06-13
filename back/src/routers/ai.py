@@ -53,7 +53,7 @@ async def generate_ai_analysis(
     if not api_key or api_key.startswith("gsk_..."):
         raise HTTPException(status_code=503, detail="Service IA non configuré (GROQ_API_KEY manquant)")
 
-    assessment: dict = svc.get_assessment(db, assessment_id, current_user)
+    assessment: dict = svc.get_assessment_detail(db, assessment_id, current_user)
 
     if not any([assessment.get("vak_dominant"), assessment.get("riasec_code"), assessment.get("disc_dominant")]):
         raise HTTPException(status_code=400, detail="Aucun résultat de test disponible pour générer une analyse")

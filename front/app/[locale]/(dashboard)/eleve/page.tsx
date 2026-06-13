@@ -32,6 +32,17 @@ export default async function EleveDashboardPage({ params }: Props) {
         </Link>
 
         <Link
+          href={`/${locale}/eleve/bilan`}
+          className="flex flex-col gap-2 rounded-xl border border-border bg-bg-base p-5 hover:border-primary-300 hover:shadow-sm transition-all"
+        >
+          <span className="text-2xl">🧭</span>
+          <h3 className="font-semibold text-text-primary">Bilan d&apos;orientation</h3>
+          <p className="text-sm text-text-secondary">
+            Découvre ton profil VAK, RIASEC et DISC.
+          </p>
+        </Link>
+
+        <Link
           href={`/${locale}/sessions`}
           className="flex flex-col gap-2 rounded-xl border border-border bg-bg-base p-5 hover:border-primary-300 hover:shadow-sm transition-all"
         >

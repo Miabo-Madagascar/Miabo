@@ -18,11 +18,12 @@ export interface DiscScores {
   D: number; I: number; S: number; C: number
 }
 
-/** Bilan d'orientation VAK/RIASEC/DISC administré par CANOPE/COSP */
+/** Bilan d'orientation VAK/RIASEC/DISC administré par CANOPE/COSP, ou auto-bilan élève (administered_by null) */
 export interface Assessment {
   id:                              string
-  administered_by:                 string
+  administered_by:                 string | null
   student_profile_id:              string | null   // Option A : élève MIABO
+  student_full_name:               string | null   // Nom résolu de l'élève MIABO
   external_young_id:               string | null   // Option B : jeune externe
   external_young_full_name:        string | null   // Nom résolu du jeune
   external_young_date_of_birth:    string | null   // Date de naissance (YYYY-MM-DD)

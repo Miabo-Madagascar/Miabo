@@ -11,7 +11,7 @@ interface Props {
 export function BilanHeader({ assessment, completedCount, total }: Props) {
   const isLocked = assessment.status === AssessmentStatus.Validated
   const progress = (completedCount / total) * 100
-  const name     = assessment.external_young_full_name ?? "Élève MIABO"
+  const name     = assessment.external_young_full_name ?? assessment.student_full_name ?? "Élève MIABO"
   const idShort  = assessment.id.slice(0, 8)
   const dateStr  = new Date(assessment.created_at).toLocaleDateString("fr-FR", {
     day: "numeric", month: "long", year: "numeric",

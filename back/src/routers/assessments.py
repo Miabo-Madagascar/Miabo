@@ -10,6 +10,8 @@ from src.schemas.assessments import (
     DiscRequest, ValidateAssessmentRequest,
 )
 from src.services import assessments as svc
+from src.services import assessment_tests as svc_tests
+from src.services import assessment_stats as svc_stats
 
 router = APIRouter(prefix="/assessments", tags=["Évaluations"])
 
@@ -17,7 +19,7 @@ router = APIRouter(prefix="/assessments", tags=["Évaluations"])
 @router.get("/stats")
 async def get_stats(current_user: CurrentUser, db: DbDep):
     """Statistiques agrégées des bilans pour le dashboard CANOPE/COSP."""
-    return svc.get_assessment_stats(db, current_user)
+    return svc_stats.get_assessment_stats(db, current_user)
 
 
 @router.get("/")
@@ -37,7 +39,7 @@ async def create_assessment(
 @router.get("/{assessment_id}")
 async def get_assessment(assessment_id: str, current_user: CurrentUser, db: DbDep):
     """Retourne le détail d'un bilan."""
-    return svc.get_assessment(db, assessment_id, current_user)
+    return svc.get_assessment_detail(db, assessment_id, current_user)
 
 
 @router.put("/{assessment_id}/vak")
@@ -45,7 +47,7 @@ async def submit_vak(
     assessment_id: str, body: VakRequest, current_user: CurrentUser, db: DbDep,
 ):
     """Enregistre les scores VAK et calcule le profil dominant (V/A/K)."""
-    return svc.submit_vak(db, assessment_id, current_user, body)
+    return svc_tests.submit_vak(db, assessment_id, current_user, body)
 
 
 @router.put("/{assessment_id}/riasec")
@@ -53,7 +55,7 @@ async def submit_riasec(
     assessment_id: str, body: RiasecRequest, current_user: CurrentUser, db: DbDep,
 ):
     """Enregistre les scores RIASEC et calcule le code de Holland (3 lettres)."""
-    return svc.submit_riasec(db, assessment_id, current_user, body)
+    return svc_tests.submit_riasec(db, assessment_id, current_user, body)
 
 
 @router.put("/{assessment_id}/riasec-code")
@@ -61,7 +63,7 @@ async def update_riasec_code(
     assessment_id: str, body: RiasecCodeRequest, current_user: CurrentUser, db: DbDep,
 ):
     """Met à jour le code de Holland choisi manuellement après résolution d'ex-aequo."""
-    return svc.update_riasec_code(db, assessment_id, current_user, body)
+    return svc_tests.update_riasec_code(db, assessment_id, current_user, body)
 
 
 @router.put("/{assessment_id}/disc")
@@ -69,7 +71,7 @@ async def submit_disc(
     assessment_id: str, body: DiscRequest, current_user: CurrentUser, db: DbDep,
 ):
     """Enregistre les scores DISC et calcule le profil dominant (D/I/S/C)."""
-    return svc.submit_disc(db, assessment_id, current_user, body)
+    return svc_tests.submit_disc(db, assessment_id, current_user, body)
 
 
 @router.put("/{assessment_id}/validate")

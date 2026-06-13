@@ -25,9 +25,10 @@ class Assessment(Base):
 
     id                 = Column(UUID(as_uuid=True), primary_key=True,
                                 default=uuid.uuid4)
+    # Nullable : un élève peut créer un auto-bilan sans conseiller CANOPE/COSP
     administered_by    = Column(UUID(as_uuid=True),
                                 ForeignKey("canope_profiles.id", ondelete="RESTRICT"),
-                                nullable=False, index=True)
+                                nullable=True, index=True)
     # Option A : élève inscrit sur MIABO
     student_profile_id = Column(UUID(as_uuid=True),
                                 ForeignKey("student_profiles.id", ondelete="SET NULL"),
