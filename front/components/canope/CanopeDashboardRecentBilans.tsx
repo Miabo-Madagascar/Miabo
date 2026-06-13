@@ -13,9 +13,10 @@ import type { Assessment } from "@/types"
 interface Props { locale: string; basePath: string }
 
 const STATUS_CFG = {
-  [AssessmentStatus.Draft]:      { label: "Brouillon", cls: "bg-gray-100 text-gray-600" },
-  [AssessmentStatus.InProgress]: { label: "En cours",  cls: "bg-primary-50 text-primary-700" },
-  [AssessmentStatus.Validated]:  { label: "Validé",    cls: "bg-success/10 text-success" },
+  [AssessmentStatus.Draft]:             { label: "Brouillon", cls: "bg-gray-100 text-gray-600" },
+  [AssessmentStatus.InProgress]:        { label: "En cours",  cls: "bg-primary-50 text-primary-700" },
+  [AssessmentStatus.PendingValidation]: { label: "À valider", cls: "bg-amber-50 text-amber-700" },
+  [AssessmentStatus.Validated]:         { label: "Validé",    cls: "bg-success/10 text-success" },
 }
 
 const TEST_CELL = (value: string | null) =>
@@ -72,7 +73,7 @@ export function CanopeDashboardRecentBilans({ locale, basePath }: Props) {
         ) : (
           rows.map(a => {
             const cfg  = STATUS_CFG[a.status as AssessmentStatus] ?? STATUS_CFG[AssessmentStatus.Draft]
-            const name = a.external_young_full_name ?? (a.student_profile_id ? "Élève MIABO" : "Jeune externe")
+            const name = a.external_young_full_name ?? a.student_full_name ?? "Jeune externe"
             const date = new Date(a.created_at).toLocaleDateString("fr-MG", { day: "numeric", month: "short" })
 
             return (

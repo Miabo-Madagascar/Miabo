@@ -41,7 +41,7 @@ export function BilanAiSuggestion({ assessmentId, onUse }: Props) {
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
             </svg>
           </span>
-          <span className="text-[12px] font-bold text-violet-800">Aide IA · Claude</span>
+          <span className="text-[12px] font-bold text-violet-800">Aide IA · MIABO</span>
         </div>
         <button onClick={generate} disabled={loading}
           className="inline-flex items-center gap-1.5 rounded-xl bg-violet-600 px-3 py-1.5 text-[12px] font-bold text-white hover:bg-violet-700 transition disabled:opacity-60 disabled:cursor-not-allowed">

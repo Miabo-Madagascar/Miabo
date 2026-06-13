@@ -38,6 +38,20 @@ class CreateAssessmentRequest(BaseModel):
         return v
 
 
+class CreateSelfAssessmentRequest(BaseModel):
+    """Création d'un auto-bilan par l'élève — toujours lié à son propre profil (Option A)."""
+    serie:           str | None = None
+    career_interest: str | None = None
+
+    @field_validator("serie")
+    @classmethod
+    def serie_valide(cls, v: str | None) -> str | None:
+        series_valides = ("A1", "A2", "S", "OSE", "C", "D", "L")
+        if v and v not in series_valides:
+            raise ValueError(f"Série invalide. Valeurs acceptées : {', '.join(series_valides)}")
+        return v
+
+
 class VakRequest(BaseModel):
     """Scores bruts VAK — 30 questions Likert 1-5, max 50 pts par profil (10 questions × 5)."""
     v_score: int

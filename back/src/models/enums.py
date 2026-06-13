@@ -54,9 +54,10 @@ class EscrowStatus(str, enum.Enum):
 
 class AssessmentStatus(str, enum.Enum):
     """Cycle d'un bilan d'orientation — CDC §COSP"""
-    draft       = "draft"
-    in_progress = "in_progress"
-    validated   = "validated"  # Immuable sauf Admin
+    draft              = "draft"
+    in_progress        = "in_progress"
+    pending_validation = "pending_validation"  # Auto-bilan élève terminé, à relire par CANOPE/COSP
+    validated          = "validated"  # Immuable sauf Admin
 
 
 class MessageType(str, enum.Enum):

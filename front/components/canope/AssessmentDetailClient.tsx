@@ -128,7 +128,7 @@ export function AssessmentDetailClient({ assessmentId, locale }: Props) {
         </Link>
         <span className="text-slate-300">/</span>
         <span className="text-slate-900 font-semibold">
-          {assessment.external_young_full_name ?? "Bilan"}
+          {assessment.external_young_full_name ?? assessment.student_full_name ?? "Bilan"}
         </span>
       </nav>
 
