@@ -36,6 +36,23 @@ en surface sur plusieurs modules à la fois.
 4. **`REGISTRABLE_ROLES = {student, tutor, parent}`** (`back/src/schemas/auth.py` L9) —
    `rh` doit être provisionné par un admin, jamais auto-inscriptible (même logique que
    `canope`/`cosp`).
+8. **Il n'existe aujourd'hui aucune interface admin réelle pour créer un compte
+   canope/cosp.** Le mécanisme actuel est entièrement manuel et hors application :
+   la personne s'auto-inscrit d'abord comme élève/tuteur/parent via le formulaire
+   public, puis un développeur exécute `back/set_role.py <email> canope` (ou `cosp`)
+   directement sur la base — ce script **promeut** un compte existant, il n'en
+   **crée** aucun. Aucun endpoint `POST /admin/users` ni usage de l'API Admin
+   Supabase (`service_role`) n'existe dans le code. **Décision validée** : pour un
+   vrai MVP, on ne réplique pas ce mécanisme manuel pour `rh` — on construit une
+   vraie interface admin de création de compte (voir Epic 0 révisé ci-dessous).
+9. **Le trigger `handle_new_user()` restreint aussi les rôles autorisés à la
+   création** (`IF v_role NOT IN ('student', 'tutor', 'parent') THEN v_role :=
+   'student'`, `back/alembic/versions/0003_auth_user_trigger.py` L47-49). Un compte
+   `rh` créé via `inviteUserByEmail` serait donc **rétrogradé silencieusement en
+   `student`** sans correctif. Le trigger doit distinguer l'auto-inscription
+   publique (où le rôle fourni par l'utilisateur n'est pas fiable, restriction à
+   garder) de la création via invitation admin/service_role (action déjà validée
+   côté serveur, le rôle doit être honoré tel quel).
 5. **Aucun composant `Table`/`DataTable` générique n'existe** — chaque liste
    (`AssessmentListClient.tsx`, `CanopeDashboardRecentBilans.tsx`) est un tableau/grid
    codé à la main. On suit ce même pattern pour la vue table RH.
@@ -86,6 +103,29 @@ Tâches :
   `back/alembic/versions/0002_rls_policies.py` L27-42).
 - Nouveau router `back/src/routers/rh.py`, dépendance `require_role(UserRole.rh)`,
   wiring dans `back/main.py`.
+- **Création de compte RH par l'admin** (remplace le mécanisme manuel `set_role.py`,
+  inexistant en interface aujourd'hui) :
+  - Endpoint `POST /admin/users` (réservé `is_admin()`) : reçoit email + nom complet
+    + rôle, appelle l'API Admin Supabase (`service_role`, `auth.admin.inviteUserByEmail`)
+    pour créer le compte et envoyer une invitation par email, puis crée la ligne
+    `profiles` correspondante avec `role='rh'`.
+  - Réutiliser le même mécanisme d'invitation Supabase que celui prévu pour
+    l'activation candidat→tuteur (Epic 3) — un seul service d'invitation générique,
+    pas deux implémentations séparées.
+  - Écran admin `front/app/[locale]/(dashboard)/admin/utilisateurs/nouveau/page.tsx` :
+    formulaire simple (email, nom, rôle) réservé à l'admin.
+  - Corriger `handle_new_user()` pour honorer le rôle fourni quand le compte est créé
+    via invitation admin/service_role, au lieu de le rétrograder en `student` comme
+    c'est le cas aujourd'hui pour tout rôle hors `student/tutor/parent` (voir
+    contrainte #9 ci-dessus).
+  - Page frontend `/auth/invitation` — **à construire de zéro, rien d'existant
+    aujourd'hui** : aucune page mot-de-passe-oublié/invitation n'existe dans
+    `front/app/[locale]/(public)/auth/` (seulement `login/` et `register/`).
+    Réutilisable tel quel : `PasswordInput.tsx`. À adapter : le pattern de
+    `front/app/api/auth/callback/route.ts` (`exchangeCodeForSession`), qui gère
+    aujourd'hui uniquement le cas inscription — il faut un nouveau branchement pour
+    `type=invite`/`type=recovery` appelant `supabase.auth.updateUser({ password })`
+    (inexistant dans le code actuel).
 - Frontend : `front/app/[locale]/(dashboard)/rh/page.tsx` (accueil), entrée `ROLE_ROOT`
   + `MENU_ITEMS` dans `Sidebar.tsx`, `ROLE_TO_PATH` dans `dashboard/page.tsx`.
 - Dashboard home RH : StatCards (nb candidats par statut, taux de conversion
