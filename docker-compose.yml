@@ -1,9 +1,10 @@
 services:
   traefik:
-    image: traefik:v3.3
+    image: traefik:v3.6
     command:
       - --api.dashboard=false
       - --providers.docker=true
+      - --providers.docker.endpoint=unix:///var/run/docker.sock
       - --providers.docker.exposedbydefault=false
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
