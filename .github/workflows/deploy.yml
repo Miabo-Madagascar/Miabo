@@ -37,7 +37,7 @@ jobs:
   deploy:
     name: Deploy sur le serveur
     needs: build
-    runs-on: ubuntu-latesta
+    runs-on: ubuntu-latest
     steps:
       - name: Déploiement via SSH
         uses: appleboy/ssh-action@v1.0.3
