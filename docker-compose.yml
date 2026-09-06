@@ -1,4 +1,30 @@
 services:
+  traefik:
+    image: traefik:v3.6
+    command:
+      - --api.dashboard=false
+      - --providers.docker=true
+      - --providers.docker.endpoint=unix:///var/run/docker.sock
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:?ACME_EMAIL est obligatoire}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+      - --log.level=INFO
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt:/letsencrypt
+    networks:
+      - proxy
+    restart: unless-stopped
+
   backend:
     build:
       context: ./back
@@ -9,8 +35,17 @@ services:
       SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET:?SUPABASE_JWT_SECRET est obligatoire}
       SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY est obligatoire}
       GROQ_API_KEY: ${GROQ_API_KEY:-}
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.miabo-api.rule=Host(`${API_DOMAIN:?API_DOMAIN est obligatoire}`)
+      - traefik.http.routers.miabo-api.entrypoints=websecure
+      - traefik.http.routers.miabo-api.tls=true
+      - traefik.http.routers.miabo-api.tls.certresolver=letsencrypt
+      - traefik.http.services.miabo-api.loadbalancer.server.port=8000
+    networks:
+      - proxy
     restart: unless-stopped
     healthcheck:
       test:
@@ -36,8 +71,17 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.miabo-web.rule=Host(`${APP_DOMAIN:?APP_DOMAIN est obligatoire}`)
+      - traefik.http.routers.miabo-web.entrypoints=websecure
+      - traefik.http.routers.miabo-web.tls=true
+      - traefik.http.routers.miabo-web.tls.certresolver=letsencrypt
+      - traefik.http.services.miabo-web.loadbalancer.server.port=3000
+    networks:
+      - proxy
     restart: unless-stopped
     healthcheck:
       test:
@@ -49,3 +93,10 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
+
+volumes:
+  letsencrypt:
+
+networks:
+  proxy:
+    name: miabo-proxy
