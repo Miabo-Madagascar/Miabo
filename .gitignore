@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+
+# Certificat ACME Let's Encrypt
+acme.json
+
+front/node_modules/
+front/.next/
+back/.venv/
+back/__pycache__/
+back/**/__pycache__/

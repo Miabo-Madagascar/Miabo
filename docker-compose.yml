@@ -1,0 +1,102 @@
+services:
+  traefik:
+    image: traefik:v3.6
+    command:
+      - --api.dashboard=false
+      - --providers.docker=true
+      - --providers.docker.endpoint=unix:///var/run/docker.sock
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:?ACME_EMAIL est obligatoire}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+      - --log.level=INFO
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt:/letsencrypt
+    networks:
+      - proxy
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./back
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL est obligatoire}
+      SUPABASE_URL: ${SUPABASE_URL:?SUPABASE_URL est obligatoire}
+      SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET:?SUPABASE_JWT_SECRET est obligatoire}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY est obligatoire}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+    expose:
+      - "8000"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.miabo-api.rule=Host(`${API_DOMAIN:?API_DOMAIN est obligatoire}`)
+      - traefik.http.routers.miabo-api.entrypoints=websecure
+      - traefik.http.routers.miabo-api.tls=true
+      - traefik.http.routers.miabo-api.tls.certresolver=letsencrypt
+      - traefik.http.services.miabo-api.loadbalancer.server.port=8000
+    networks:
+      - proxy
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  frontend:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?NEXT_PUBLIC_SUPABASE_URL est obligatoire}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:?NEXT_PUBLIC_SUPABASE_ANON_KEY est obligatoire}
+    environment:
+      API_URL: http://backend:8000
+      NODE_ENV: production
+    depends_on:
+      backend:
+        condition: service_healthy
+    expose:
+      - "3000"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.miabo-web.rule=Host(`${APP_DOMAIN:?APP_DOMAIN est obligatoire}`)
+      - traefik.http.routers.miabo-web.entrypoints=websecure
+      - traefik.http.routers.miabo-web.tls=true
+      - traefik.http.routers.miabo-web.tls.certresolver=letsencrypt
+      - traefik.http.services.miabo-web.loadbalancer.server.port=3000
+    networks:
+      - proxy
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000').then(response => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  letsencrypt:
+
+networks:
+  proxy:
+    name: miabo-proxy
