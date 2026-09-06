@@ -1,0 +1,59 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: {}
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build images (validation)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Build backend (sans secrets, juste validation)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./back
+          file: ./back/Dockerfile
+          push: false
+
+      - name: Build frontend (sans secrets, juste validation)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./front
+          file: ./front/Dockerfile
+          push: false
+          build-args: |
+            NEXT_PUBLIC_SUPABASE_URL=placeholder
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder
+
+  deploy:
+    name: Deploy sur le serveur
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Déploiement via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -euo pipefail
+            cd ${{ secrets.PROJECT_PATH }}
+            git fetch origin main
+            git checkout main
+            git reset --hard origin/main
+            docker compose pull
+            docker compose build --pull
+            docker compose up -d --remove-orphans
+            docker compose ps
+            docker image prune -f
